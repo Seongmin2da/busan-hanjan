@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><title>geocode</title><pre id="R">wait</pre>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ea26af7dd37d540000eac6c44b2e27e8&libraries=services&autoload=false"></script>
+<script>
+const P=[{"b": "갈매기브루잉", "n": "해운대점", "addr": "부산 해운대구 해운대해변로265번길 9"}, {"b": "갈매기브루잉", "n": "남포점", "addr": "부산 중구 광복로 21-3"}, {"b": "고릴라브루잉", "n": "비치점", "addr": "부산 해운대구 달맞이길 30"}, {"b": "고릴라브루잉", "n": "해운대점", "addr": "부산 해운대구 해운대로570번길 46"}, {"b": "와일드캣브루잉", "n": "서면 본점", "addr": "부산 부산진구 신천대로62번길 2"}, {"b": "부산맥주", "n": "미포 탭룸", "addr": "부산 해운대구 달맞이길62번길 38"}, {"b": "툼브로이", "n": "송정 본점", "addr": "부산 해운대구 해운대로 1244"}, {"b": "허심청브로이", "n": "호텔농심", "addr": "부산 동래구 금강공원로20번길 23"}, {"b": "프라하993", "n": "F1963", "addr": "부산 수영구 구락로123번길 20"}, {"b": "오시게", "n": "온천장본점", "addr": "부산 동래구 온천천로 11"}, {"b": "허거스", "n": "남천동", "addr": "부산 수영구 광남로48번길 49"}];
+kakao.maps.load(async()=>{
+ const g=new kakao.maps.services.Geocoder(),ps=new kakao.maps.services.Places();
+ const A=a=>new Promise(r=>g.addressSearch(a,(d,s)=>r(s==="OK"?d[0]:null)));
+ const Kw=q=>new Promise(r=>ps.keywordSearch(q,(d,s)=>r(s==="OK"?d.slice(0,3):[])));
+ const out=[];
+ for(const p of P){const a=await A(p.addr);const k=await Kw(p.b.replace("브루잉"," 브루잉")+" "+p.n);
+  out.push({n:p.b+" "+p.n,addr:p.addr,geo:a?{y:a.y,x:a.x,road:a.road_address&&a.road_address.address_name}:null,kw:k.map(x=>({name:x.place_name,y:x.y,x:x.x,road:x.road_address_name,url:x.place_url}))});}
+ document.getElementById("R").textContent=JSON.stringify(out);
+});
+</script>
