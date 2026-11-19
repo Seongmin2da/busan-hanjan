@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>부산, 한 잔 카드뉴스</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--navy:#153b46;--paper:#f8f9f5;--yellow:#ffd05a}
+*{box-sizing:border-box;margin:0}
+body{background:#d8dfd6;font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;word-break:keep-all;padding:30px;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+.card{width:1080px;height:1350px;position:relative;overflow:hidden;padding:56px 68px;background:var(--paper);color:var(--navy);margin-bottom:30px;line-height:1.7}
+.card header{display:flex;justify-content:space-between;align-items:center;font-size:22px}
+.brand{font-size:36px;font-weight:850;letter-spacing:-.06em}.brand i{color:#c58e20;font-style:normal}
+.card footer{position:absolute;left:68px;right:68px;bottom:35px;border-top:1px solid currentColor;padding-top:17px;display:flex;justify-content:space-between;font-size:15px}
+.kicker{font-size:22px;margin-top:70px}
+h1,h2{letter-spacing:-.05em;line-height:1.25;font-weight:780}
+h2{font-size:68px;margin-top:18px}
+.lead{font-size:27px;margin-top:28px;line-height:1.85}
+.note{position:absolute;left:68px;right:68px;bottom:110px;font-size:16px;color:#506958;line-height:1.8}
+.box{margin-top:44px;padding:36px;border-radius:14px;background:#fff;font-size:28px;line-height:1.8}
+.box b{display:block;font-size:34px;margin-bottom:6px}
+.box.sm{margin-top:20px;padding:26px 34px;font-size:24px;line-height:1.7}
+.box.sm b{font-size:30px;margin-bottom:4px}
+.box .src{display:block;font-size:17px;color:#6a7f70;margin-top:8px}
+.c1{background:linear-gradient(180deg,#153b46 0%,#2c6a72 55%,#e9a94a 100%);color:#fff}
+.c1 h1{font-size:122px;margin-top:50px}
+.pill{display:inline-block;border:1px solid #fff9;border-radius:40px;padding:10px 22px;font-size:22px;margin-top:100px}
+.cta{display:inline-block;background:var(--yellow);color:var(--navy);border-radius:50px;padding:20px 32px;font-size:24px;font-weight:700;margin-top:50px}
+.c3{background:#f2e4b8}.c4{background:#d9e8df}.c5{background:#eef0e6}
+.c5 .film{background:var(--navy);color:#f4f7ed;border-radius:14px;padding:40px;margin-top:40px}
+.c5 .film h3{font-size:44px;line-height:1.45}.c5 .film p{font-size:24px;margin-top:20px}
+.c6{background:var(--navy);color:#f7f8ed}.c6 h2{font-size:88px}
+.c-brewer{background:#e6e1d3}
+.c-stores{background:#f6efe0}
+.c-check{background:#e2ebe6}
+.flow{display:flex;justify-content:space-between;border-block:1px solid #a9bfad66;padding:26px 8px;margin-top:46px;font-size:24px}
+.warn{font-size:17px;line-height:1.9;color:#d2dfcc;margin-top:36px}
+a.cta{text-decoration:none}
+.stores{margin-top:40px;border-top:2px solid var(--navy)}
+.stores .r{display:grid;grid-template-columns:230px 190px 1fr;gap:18px;align-items:baseline;padding:20px 4px;border-bottom:1px solid #15394633;font-size:21px;line-height:1.55}
+.stores .r b{font-size:27px;letter-spacing:-.03em}
+.stores .r .area{color:#506958}
+.checks{list-style:none;padding:0;margin-top:40px;counter-reset:c}
+.checks li{counter-increment:c;position:relative;background:#fff;border-radius:14px;padding:24px 30px 24px 92px;margin-top:16px;font-size:22px;line-height:1.65}
+.checks li::before{content:counter(c);position:absolute;left:28px;top:22px;width:44px;height:44px;border-radius:50%;background:var(--navy);color:#fff;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.checks li b{display:block;font-size:27px;margin-bottom:2px}
+@media print{body{padding:0;background:none}.card{margin:0;break-after:page;print-color-adjust:exact;-webkit-print-color-adjust:exact}@page{size:1080px 1350px;margin:0}}
+/* 보기 방식: PC(768px 이상)=스크롤(한 장씩 크게), 휴대폰=한 장씩 넘김(책장 효과, 화면 꽉 채움) */
+#stage{display:grid;grid-template-columns:repeat(var(--cols,1),auto);gap:20px;justify-content:center;width:100%}
+#stage .card{margin:0}
+/* PC: 휠 한 번에 카드 한 장씩 딱 맞춰 멈춤 */
+html.snap{scroll-snap-type:y mandatory}
+html.snap #stage .card{scroll-snap-align:center;scroll-snap-stop:always}
+@media (prefers-reduced-motion:no-preference){html.snap{scroll-behavior:smooth}}
+body.slides{height:100vh;height:100dvh;overflow:hidden;padding:0 0 64px!important;justify-content:center;touch-action:pan-y;user-select:none}
+body.slides #stage{display:block;position:relative;perspective:2600px;flex:none;width:auto}
+body.slides .card{display:none;position:absolute;top:0;left:0;margin:0;cursor:pointer;backface-visibility:hidden;transform-origin:left center}
+body.slides .card.on,body.slides .card.turn{display:block}
+body.slides .card.on{z-index:1}
+body.slides .card.turn{z-index:2;box-shadow:12px 0 40px #15394655}
+.deck-bar{display:none}
+body.slides .deck-bar{display:flex;position:fixed;left:50%;bottom:10px;transform:translateX(-50%);align-items:center;gap:12px;background:#153b46;color:#fff;border-radius:999px;padding:5px 10px;font-size:15px;z-index:9;box-shadow:0 6px 20px #15394640}
+.deck-bar button{border:0;background:#ffffff1f;color:#fff;width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer;font-family:inherit}
+.deck-bar button:disabled{opacity:.35;cursor:default}
+.deck-bar .dots{display:flex;gap:6px}
+.deck-bar .dots i{width:7px;height:7px;border-radius:50%;background:#ffffff59;cursor:pointer}
+.deck-bar .dots i.on{background:#ffd05a;width:20px;border-radius:4px}
+.deck-bar .num{min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+@media print{body,body.slides{height:auto;overflow:visible;display:block;padding:0!important}#stage{display:block!important;width:auto!important;height:auto!important}#stage .card{display:block!important;position:static!important;box-shadow:none;zoom:1!important;height:1350px!important;transform:none!important}.deck-bar{display:none!important}}
+</style>
+</head>
+<body>
+
+<article class="card c1">
+<header><span class="brand">부산<i>,</i> 한 잔</span><span>하루의 끝을, 부산답게.</span></header>
+<span class="pill">맥주보다 먼저, 부산을 고르세요</span>
+<h1>오늘 부산에서<br>뭐 해요?</h1>
+<p class="lead">맥주를 몰라도 괜찮아요.<br>좋아하는 부산의 장면 끝에,<br>당신의 한 잔을 만나보세요.</p>
+<a class="cta" href="recommend.html">부산을 만나는 새로운 방법 →</a>
+<p class="note" style="color:#e1e9e0">배경은 색으로 그린 콘셉트예요. 이 자리에 AI 콘셉트 이미지를 넣으면 “AI 콘셉트 이미지” 표기를 함께 남겨 주세요.</p>
+<footer><span>가칭 · 서비스 기획 사전 홍보 시안 · 성인 대상</span><span>01 / 09</span></footer>
+</article>
+
+<article class="card">
+<header><span class="brand">부산<i>,</i> 한 잔</span><span>하루의 끝을, 부산답게.</span></header>
+<p class="kicker">맥주 입문 대신, 부산 입문</p>
+<h2>좋아하는 장면 끝에,<br>한 잔이면 충분해요.</h2>
+<div class="box sm" style="margin-top:40px"><b>바다를 담은 하루 · 허거스</b>광안리 해변 끝자락, 남천해변공원 앞. ‘부산다움’을 내건 양조장이에요.<span class="src">국제신문 2024-08-21</span></div>
+<div class="box sm"><b>느긋하게 쉬는 하루 · 허심청브로이</b>동래 온천동, 호텔농심의 부대 사업장. 충분히 쉬고 수분을 보충한 뒤 선택해요.<span class="src">국제신문 2020-08-26</span></div>
+<div class="box sm"><b>취향을 걷는 하루 · 프라하993</b>망미동, 1963년에 지은 옛 철사 공장을 바꾼 문화공간이에요.<span class="src">프라하993 공식 페이지</span></div>
+<p class="note">출처는 2026-11-17에 확인했어요. 현재 영업·메뉴는 방문 전 매장 공지를 확인해 주세요. 이미지를 넣을 때는 실제 매장 사진이 아니면 그렇게 표기해 주세요.</p>
+<footer><span>가칭 · 서비스 기획 사전 홍보 시안 · 성인 대상</span><span>02 / 09</span></footer>
+</article>
+
+<article class="card c3">
+<header><span class="brand">부산<i>,</i> 한 잔</span><span>하루의 끝을, 부산답게.</span></header>
+<p class="kicker">부산의 재료와 이야기</p>
+<h2>이름만 부산 말고,<br>이야기까지 부산.</h2>
+<p class="lead">맥주를 고를 이유가,<br>맛 말고도 있다면?</p>
+<div class="box" style="background:#fff9e4;margin-top:36px"><b>대저토마토 → ‘톰과에일’</b>허거스가 대저토마토로 만든 에일이에요.</div>
+<div class="box" style="background:#fff9e4;margin-top:20px"><b>기장 봉한꿀 → ‘꿀렁’</b>기장 봉한꿀로 만든 브라곳 스타일 맥주예요.</div>
+<p class="note">국제신문 2024-08-21 보도에 소개된 사례예요(확인 2026-11-17). 지금도 판매하는지는 확인하지 못했어요.</p>
+<footer><span>가칭 · 서비스 기획 사전 홍보 시안 · 성인 대상</span><span>03 / 09</span></footer>
+</article>
+
+<article class="card c4">
+<header><span class="brand">부산<i>,</i> 한 잔</span><span>하루의 끝을, 부산답게.</span></header>
+<p class="kicker">부산 안의 작은 외국</p>
+<h2>부산에 왔는데,<br>잠깐 다른 나라.</h2>
+<p class="lead">낯선 공간이 여행의 시작이 될 수도 있으니까요.</p>
+<div class="box sm" style="background:#f4f5e6;margin-top:34px"><b>체코 · 프라하993</b>“Czech original. Freshly crafted.”<br>망미동 옛 공장 안의 브루어리예요.<span class="src">프라하993 공식 페이지 (확인 2026-11-17)</span></div>
+<div class="box sm" style="background:#f4f5e6"><b>독일식 · 허심청브로이</b>독일 전통 양조 방식으로 “홉 향보다는 몰트 향이 강한” 맥주를 만들어요.<span class="src">국제신문 2020-08-26 (2020년 기준)</span></div>
+<p class="lead" style="font-size:24px;margin-top:22px">공간의 매력이 먼저, 맥주는 그다음이에요.</p>
+<p class="note">특정 국가의 공식 문화 체험이나 매장 제휴가 아니에요.</p>
+<footer><span>가칭 · 서비스 기획 사전 홍보 시안 · 성인 대상</span><span>04 / 09</span></footer>
+</article>
+
+<article class="card c-brewer">
+<header><span class="brand">부산<i>,</i> 한 잔</span><span>하루의 끝을, 부산답게.</span></header>
+<p class="kicker">부산에 자리 잡은 양조사들</p>
+<h2>멀리서 와서,<br>부산에서 빚어요.</h2>
+<div class="box" style="margin-top:40px"><b>독일 → 해운대 · 툼브로이</b>“독일인 사장이 직접 양조한 독일 맥주”. 호밀로 만든 독일 전통 로겐맥주를 맛볼 수 있어요.<span class="src">KNN 「렛츠고 라이콘」 2025-12-25 (확인 2026-11-17)</span></div>
+<div class="box" style="margin-top:22px"><b>영국 → 부산 · 고릴라브루잉</b>영국 출신 창업자 Paul Edwards의 MBE 수훈 이야기가 소개됐어요.<span class="src">코리아타임스 2025-12-01</span></div>
+<p class="note">언론 보도를 옮긴 내용이에요. 매장 제휴나 추천 순위가 아니에요.</p>
+<footer><span>가칭 · 서비스 기획 사전 홍보 시안 · 성인 대상</span><span>05 / 09</span></footer>
+</article>
+
+<article class="card c5">
+<header><span class="brand">부산<i>,</i> 한 잔</span><span>하루의 끝을, 부산답게.</span></header>
+<p class="kicker">맥주 축제가 아니어도 괜찮아요</p>
+<h2 style="font-size:62px">축제는 오늘의 계기,<br>이야기는 한 잔의 이유.</h2>
+<div class="film"><span style="font-size:20px;color:#d2dcbf">영화 × 부산의 장면</span>
+<h3>엔딩 크레딧 뒤에도,<br>부산은 계속되니까.</h3>
+<p>영화를 본 뒤, 그 여운을 나눌 로컬 공간.<br>오늘의 동선과 여유 시간에서 한 잔을 시작해요.</p>
+<p style="color:#efd189;font-size:21px;border-top:1px solid #fff4;padding-top:22px">영화 관람 → 동네의 이야기 → 로컬 한 잔</p></div>
+<p class="lead" style="font-size:23px">축제가 있는 달엔 행사와 이야기를 함께.<br>예) 2026 허심청브로이 옥토버페스트 · 10월 15~17일 · 호텔농심 야외마당 (종료)<br><b>축제가 없는 달엔 좋아하는 부산의 장면으로.</b></p>
+<p class="note">행사 출처: 이벤터스 행사 페이지(확인 2026-11-18). 기획 예시예요. 공식 제휴·실시간 행사·상권 효과를 보장하지 않아요.</p>
+<footer><span>가칭 · 서비스 기획 사전 홍보 시안 · 성인 대상</span><span>06 / 09</span></footer>
+</article>
+
+<article class="card c-stores">
+<header><span class="brand">부산<i>,</i> 한 잔</span><span>하루의 끝을, 부산답게.</span></header>
+<p class="kicker">이 시안에 나온 가게</p>
+<h2>한눈에 보는<br>부산의 한 잔.</h2>
+<div class="stores">
+<div class="r"><b>허거스</b><span class="area">수영구 남천동</span><span>광안리 해변 끝자락. 부산 재료 맥주를 선보인 양조장 (2024 보도)</span></div>
+<div class="r"><b>허심청브로이</b><span class="area">동래구 온천동</span><span>호텔농심 부대 사업장. 독일 전통 양조 방식 (2020 보도)</span></div>
+<div class="r"><b>프라하993</b><span class="area">수영구 망미동</span><span>1963년 옛 철사 공장을 바꾼 문화공간. “Czech original”</span></div>
+<div class="r"><b>툼브로이</b><span class="area">해운대구</span><span>독일인 대표가 직접 양조. 호밀 로겐맥주</span></div>
+<div class="r"><b>고릴라브루잉</b><span class="area">해운대구</span><span>영국 출신 창업자. 해운대점은 지도에 ‘영업 중’ (2026-11-16 팀 조사)</span></div>
+</div>
+<p class="note">출처: 국제신문(2024-08-21, 2020-08-26), 프라하993 공식 페이지, KNN(2025-12-25), 코리아타임스(2025-12-01). 영업 상태·메뉴는 바뀔 수 있어요.</p>
+<footer><span>가칭 · 서비스 기획 사전 홍보 시안 · 성인 대상</span><span>07 / 09</span></footer>
+</article>
+
+<article class="card c-check">
+<header><span class="brand">부산<i>,</i> 한 잔</span><span>하루의 끝을, 부산답게.</span></header>
+<p class="kicker">헛걸음하지 않으려면</p>
+<h2>가기 전에,<br>이것만 확인해요.</h2>
+<ol class="checks">
+<li><b>문 닫은 지점이 있어요</b>갈매기브루잉 광안점, 고릴라브루잉 광안리점은 지도·리뷰 사이트에 ‘폐점’으로 표시돼요.</li>
+<li><b>휴무일을 확인해요</b>툼브로이·허심청브로이는 지도에 ‘매주 월요일 휴무’예요. 툼브로이는 ‘월·화·수 휴무’로 적힌 곳도 있어요.</li>
+<li><b>메뉴는 바뀌어요</b>“메뉴가 가능한것. 아닌것이 섞여있어서” — 한 방문객의 영상 자막이에요.</li>
+<li><b>양조장 투어는 따로 확인해요</b>갈매기브루잉: “현재 양조장 투어는 진행하고 있지 않습니다.”</li>
+</ol>
+<p class="note">출처: 네이버·카카오 지도(2026-11-16 팀 조사), polle 리뷰 페이지(확인 2026-11-18), 유튜브 방문 영상, 갈매기브루잉 공식 안내(팀 조사).</p>
+<footer><span>가칭 · 서비스 기획 사전 홍보 시안 · 성인 대상</span><span>08 / 09</span></footer>
+</article>
+
+<article class="card c6">
+<header><span class="brand">부산<i style="color:#ffd05a">,</i> 한 잔</span><span>하루의 끝을, 부산답게.</span></header>
+<p class="kicker">취향은, 하루를 따라 발견하는 것</p>
+<h2>취향은 몰라도,<br>오늘은 고를 수<br>있으니까.</h2>
+<div class="flow"><span>장면 고르기</span><span>→</span><span>한 잔 만나기</span><span>→</span><span>취향 남기기</span></div>
+<a class="cta" href="recommend.html" style="margin-top:36px">나에게 맞는 부산 맥주 찾기 →</a>
+<p class="warn">가칭·준비 중인 서비스 제안이에요. 추천·예약·기록 기능은 아직 제공하지 않아요. 매장·메뉴·행사 일정과 제휴는 확정되지 않았어요. 방문 전 매장 공지를 확인해 주세요.<br>성인 대상 콘텐츠예요. 지나친 음주는 건강에 해로워요. 음주 후 운전·수영을 하지 마세요. 목욕 후 충분히 쉬고 수분을 보충해 주세요.</p>
+<footer><span>가칭 · 서비스 기획 사전 홍보 시안 · 성인 대상</span><span>09 / 09</span></footer>
+</article>
+
+<nav class="deck-bar" aria-label="카드 넘기기">
+<button id="prevBtn" aria-label="이전 카드">‹</button>
+<span class="dots" id="dots"></span>
+<span class="num" id="num"></span>
+<button id="nextBtn" aria-label="다음 카드">›</button>
+</nav>
+<script>
+/* 보기 방식
+   - PC(화면 가로 768px 이상): 아래로 스크롤. 카드 한 장이 화면 높이에 맞고, 휠 한 번에 한 장씩 멈춤
+   - 휴대폰(768px 미만): 한 장씩 넘김. 가로를 꽉 채우고 세로도 화면 끝까지 늘림
+     오른쪽 탭=다음, 왼쪽=이전, 스와이프, 방향키. 넘길 때 책장처럼 넘어감 */
+(function(){
+  var cards=[].slice.call(document.querySelectorAll(".card")), n=cards.length, cur=0, anim=null, done=null, mode="";
+  var still=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var stage=document.createElement("div");stage.id="stage";
+  cards[0].parentNode.insertBefore(stage,cards[0]);
+  cards.forEach(function(c){stage.appendChild(c);});
+  var dots=document.getElementById("dots");
+  cards.forEach(function(_,i){var d=document.createElement("i");d.title=(i+1)+"번째 카드";d.onclick=function(){go(i);};dots.appendChild(d);});
+  var BAR=64;
+  function layout(){
+    var W=document.documentElement.clientWidth||window.innerWidth, H=window.innerHeight;
+    var want=W>=768?"scroll":"slide";
+    if(want!==mode){
+      if(anim){anim.onfinish=null;anim.cancel();anim=null;if(done)done();}
+      mode=want;
+      document.body.classList.toggle("slides",mode==="slide");
+      document.documentElement.classList.toggle("snap",mode==="scroll");
+      cards.forEach(function(c){c.classList.remove("on","turn");});
+      if(mode==="slide"){cards[cur].classList.add("on");ui();}
+    }
+    if(mode==="scroll"){
+      var cols=1, gap=30, side=64;
+      /* 카드 한 장이 화면 높이에 통째로 들어가게 줄임 */
+      var z=Math.min(1,(W-side-(cols-1)*gap)/cols/1080,(H-40)/1350);
+      stage.style.setProperty("--cols",cols);stage.style.width="";stage.style.height="";
+      cards.forEach(function(c){c.style.zoom=z;c.style.height="";});
+      document.body.style.padding="20px 16px";
+    }else{
+      document.body.style.padding="";
+      var avail=H-BAR, z2=W/1080, h=1350;
+      if(avail/z2>=1350){h=avail/z2;}else{z2=avail/1350;}
+      cards.forEach(function(c){c.style.zoom=z2;c.style.height=h+"px";});
+      stage.style.width=(1080*z2)+"px";stage.style.height=(h*z2)+"px";
+    }
+  }
+  function ui(){
+    document.getElementById("num").textContent=(cur+1)+" / "+n;
+    [].forEach.call(dots.children,function(d,k){d.classList.toggle("on",k===cur);});
+    document.getElementById("prevBtn").disabled=cur===0;
+    document.getElementById("nextBtn").disabled=cur===n-1;
+  }
+  function go(i){
+    if(mode!=="slide"||i<0||i>=n||i===cur)return;
+    if(anim){anim.onfinish=null;anim.cancel();anim=null;if(done)done();}
+    var from=cards[cur],to=cards[i],fwd=i>cur;
+    cur=i;ui();
+    try{history.replaceState(null,"","#"+(cur+1));}catch(e){}
+    if(still||!from.animate){from.classList.remove("on");to.classList.add("on");return;}
+    var top=fwd?from:to, under=fwd?to:from;
+    under.classList.add("on");top.classList.add("turn");
+    var open={transform:"rotateY(0deg)",filter:"brightness(1)"}, flip={transform:"rotateY(-92deg)",filter:"brightness(.6)"};
+    anim=top.animate(fwd?[open,flip]:[flip,open],{duration:700,easing:"cubic-bezier(.45,.05,.35,1)"});
+    done=function(){top.classList.remove("turn");from.classList.remove("on");to.classList.add("on");done=null;};
+    var mine=anim;
+    var end=function(){if(anim!==mine)return;anim.onfinish=null;try{anim.cancel();}catch(e){}anim=null;if(done)done();};
+    anim.onfinish=end;
+    setTimeout(end,800); /* 안전장치: 애니메이션이 멈춰도 0.8초 뒤 넘김 마무리 */
+  }
+  document.getElementById("prevBtn").onclick=function(){go(cur-1);};
+  document.getElementById("nextBtn").onclick=function(){go(cur+1);};
+  cards.forEach(function(c){c.addEventListener("click",function(e){
+    if(mode!=="slide"||e.target.closest("a"))return; /* 링크는 그대로 이동 */
+    var r=stage.getBoundingClientRect();
+    go(e.clientX-r.left<r.width*0.35?cur-1:cur+1);
+  });});
+  document.addEventListener("keydown",function(e){
+    if(mode!=="slide")return;
+    if(e.key==="ArrowRight"||e.key==="PageDown"||e.key===" "){e.preventDefault();go(cur+1);}
+    if(e.key==="ArrowLeft"||e.key==="PageUp"){e.preventDefault();go(cur-1);}
+    if(e.key==="Home")go(0); if(e.key==="End")go(n-1);
+  });
+  var sx=null,sy=0;
+  document.addEventListener("touchstart",function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  document.addEventListener("touchend",function(e){
+    if(sx===null||mode!=="slide")return;var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;sx=null;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){go(dx<0?cur+1:cur-1);}
+  },{passive:true});
+  var h0=parseInt(location.hash.slice(1),10);
+  if(h0>=1&&h0<=n)cur=h0-1;
+  window.addEventListener("resize",layout);
+  layout();
+})();
+</script>
+</body>
+</html>

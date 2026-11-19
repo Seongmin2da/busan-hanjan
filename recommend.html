@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>부산, 한 잔 · 맥주 추천</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+/* 화면 맞춤: 가운데 고정 1200px 틀, 맥주는 4칸 격자(위 3개 + 더 보기 칸) */
+:root{--navy:#153b46;--paper:#f8f9f5;--yellow:#ffd05a;--gold:#b07d16;--line:#15394626;--muted:#506958;--good:#2f7a4f;--bad:#b4472f;--card:#fff;--photo:#eef1ea;--chip:#eef2ea;--chip2:#fde9d4;--seg:#f3f5ef;--notice:#fff6d9;--notice-line:#ecd58f}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--paper)}
+body{color:var(--navy);font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;word-break:keep-all;line-height:1.6}
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.brand{font-size:30px;font-weight:850;letter-spacing:-.06em}.brand i{color:#c58e20;font-style:normal}
+.back{color:var(--navy);font-size:15px;font-weight:600;text-decoration:none;border:1px solid var(--navy);border-radius:999px;padding:6px 14px}
+h1{font-size:clamp(28px,4.6vw,46px);letter-spacing:-.05em;line-height:1.25;margin-top:28px;text-wrap:balance}
+.lead{font-size:18px;margin-top:10px;color:var(--muted)}
+.notice{margin-top:20px;background:var(--notice);border:1px solid var(--notice-line);border-radius:12px;padding:14px 18px;font-size:14px;line-height:1.75}
+.panel{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+.panel h2{font-size:20px;letter-spacing:-.03em}
+.panel .hint{font-size:14px;color:var(--muted);margin-top:2px}
+.qgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px}
+.q{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.q .label b{display:block;font-size:17px}.q .label small{color:var(--muted);font-size:13px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--seg);color:var(--navy);border-radius:999px;padding:7px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.seg button.like[aria-pressed="true"]{background:var(--good);border-color:var(--good)}
+.seg button.dislike[aria-pressed="true"]{background:var(--bad);border-color:var(--bad)}
+button:focus-visible,a:focus-visible{outline:2px solid #c58e20;outline-offset:2px}
+.actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.actions button{font:inherit;font-size:15px;border-radius:999px;padding:9px 18px;cursor:pointer;border:1px solid var(--navy);background:var(--card);color:var(--navy)}
+.summary{margin-top:28px;font-size:16px}
+.summary b{font-size:20px}
+.list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:14px}
+.beer{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 14px 12px;display:flex;flex-direction:column;min-width:0}
+.ph{aspect-ratio:1/1;max-width:100%;background:var(--photo);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:contain;padding:10px}
+.ph.none{border:1px dashed #15394655;color:var(--muted);font-size:14px;flex-direction:column;gap:4px;text-align:center}
+.ph.none b{font-size:16px;color:var(--navy)}
+.credit{font-size:11px;color:var(--muted);margin-top:4px;text-align:right}
+.rankrow{display:flex;align-items:center;gap:8px;margin-top:10px}
+.rank{font-size:13px;color:var(--muted)}
+.score{margin-left:auto;font-weight:800;font-size:14px;background:var(--yellow);border-radius:999px;padding:1px 10px}
+.beer h3{font-size:20px;letter-spacing:-.03em;line-height:1.35;margin-top:2px}
+.brew{font-size:14px;color:var(--muted)}
+.spec{font-size:14px;font-weight:700;color:var(--gold);margin-top:6px;font-variant-numeric:tabular-nums}
+.spec small{font-weight:600;color:var(--bad)}
+.one{font-size:15px;margin-top:8px}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tags span{font-size:12px;border:1px dashed #15394666;border-radius:999px;padding:1px 8px}
+.tags .hyp{border:0;color:var(--muted)}
+.loc{margin-top:10px;font-size:13px;line-height:1.55;border-top:1px solid var(--line);padding-top:8px}
+.loc b{font-size:13px}
+.loc a{color:var(--navy);font-weight:600}
+.why{margin-top:8px;font-size:13px;padding:0}
+.why li{list-style:none;margin:1px 0}
+.why .p{color:var(--good)}.why .m{color:var(--bad)}
+details{margin-top:8px;font-size:12.5px;color:var(--muted)}
+details summary{cursor:pointer}
+details p{margin-top:6px}
+details a{color:var(--navy);word-break:break-all}
+.nums{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.nums span{font-size:12px;background:var(--chip);border-radius:8px;padding:2px 8px;color:var(--navy)}
+.nums span.two{background:var(--chip2)}
+.moretile{font:inherit;color:var(--navy);background:var(--card);border:2px dashed #15394666;border-radius:16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px;min-height:240px;text-align:center}
+.moretile b{font-size:20px}
+.moretile span{font-size:13px;color:var(--muted)}
+.moretile:hover{border-color:var(--navy)}
+.excluded{margin-top:28px;font-size:14px;color:var(--muted)}
+.excluded li{margin-left:18px}
+footer.foot{margin-top:40px;border-top:1px solid var(--navy);padding-top:14px;font-size:13px;color:var(--muted);line-height:1.8}
+@media (max-width:1000px){.list{grid-template-columns:repeat(2,minmax(0,1fr))}.qgrid{grid-template-columns:1fr}}
+@media (max-width:520px){.list{grid-template-columns:1fr}.q{grid-template-columns:1fr;gap:6px}.panel{padding:16px}.moretile{min-height:120px}}
+/* 내 위치·지도 */
+.locctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.locctl>button,.locctl select{font:inherit;font-size:15px;border:1px solid var(--navy);background:var(--card);color:var(--navy);border-radius:999px;padding:7px 14px;cursor:pointer}
+.locctl>button.main{background:var(--navy);color:#fff}
+.locctl .seg{margin-left:4px}
+.locmsg{font-size:14px;margin-top:8px;min-height:1.4em;color:var(--muted)}
+.locmsg b{color:var(--navy)}
+.mapwrap{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;margin-top:10px;align-items:start}
+#map{width:100%;height:auto;display:block;border-radius:14px;background:#cfe3ea;cursor:crosshair;touch-action:manipulation}
+#map .land{fill:#f1f2e8;stroke:#9fb3a6;stroke-width:1.2}
+#map .river{fill:none;stroke:#a9cbd6;stroke-width:5;stroke-linecap:round}
+#map .gu{font-size:13px;fill:#8a9b90;font-weight:600;pointer-events:none}
+#map .sea{font-size:14px;fill:#7fa3b0;font-weight:700;letter-spacing:.3em;pointer-events:none}
+#map .range{fill:#ffd05a33;stroke:#c58e20;stroke-width:1.5;stroke-dasharray:5 4;pointer-events:none}
+#map .pin{cursor:pointer}
+#map .pin circle{fill:#ffd05a;stroke:#153b46;stroke-width:2}
+#map .pin.far circle{fill:#fff}
+#map .pin.sel circle{fill:#153b46;stroke:#ffd05a}
+#map .pin text{font-size:12.5px;font-weight:700;fill:#153b46;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+#map .pin line{stroke:#153b46;stroke-width:1}
+#map .me circle{fill:#2f7a4f;stroke:#fff;stroke-width:3}
+#map .me text{font-size:13px;font-weight:800;fill:#2f7a4f;paint-order:stroke;stroke:#fff;stroke-width:4px}
+.mapnote{font-size:12px;color:var(--muted);margin-top:6px}
+.placeinfo{font-size:14px;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--seg)}
+.placeinfo h3{font-size:18px;letter-spacing:-.03em}
+.placeinfo .addr{color:var(--muted);font-size:13px}
+.placeinfo ul{padding:0;margin-top:8px}
+.placeinfo li{list-style:none;padding:7px 0;border-bottom:1px solid var(--line)}
+.placeinfo li:last-child{border-bottom:0}
+.placeinfo button.pl{font:inherit;background:none;border:0;padding:0;color:var(--navy);cursor:pointer;text-align:left;width:100%;display:flex;justify-content:space-between;gap:8px}
+.placeinfo button.pl b{font-size:15px}
+.placeinfo .t{white-space:nowrap;font-weight:700}
+.placeinfo .t.near{color:var(--good)}.placeinfo .t.far{color:var(--bad)}
+.placeinfo a{color:var(--navy);font-weight:600}
+.placeinfo .back2{font:inherit;font-size:13px;background:none;border:0;color:var(--muted);cursor:pointer;padding:0;margin-bottom:6px}
+.banner{margin-top:26px;background:var(--navy);color:#fff;border-radius:14px;padding:16px 20px;font-size:16px;line-height:1.7}
+.banner b{color:var(--yellow)}
+.banner button{font:inherit;font-size:14px;margin-top:8px;background:transparent;color:#fff;border:1px solid #ffffff99;border-radius:999px;padding:5px 14px;cursor:pointer}
+.banner:empty{display:none}
+.dist{font-size:13px;font-weight:700;margin-top:6px}
+.dist.near{color:var(--good)}.dist.far{color:var(--bad)}
+@media (max-width:860px){.mapwrap{grid-template-columns:1fr}}
+/* 위치 권한 안내 팝업 (브라우저 권한 창보다 먼저 뜸) */
+.modal{position:fixed;inset:0;background:#153b4699;display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal[hidden]{display:none}
+.modal .box{background:var(--card);color:var(--navy);border-radius:20px;max-width:400px;width:100%;padding:26px 24px 20px;box-shadow:0 20px 60px #15394666;text-align:center;animation:pop .22s ease}
+@keyframes pop{from{transform:translateY(12px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.modal .ico{width:56px;height:56px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.modal h3{font-size:21px;letter-spacing:-.03em;line-height:1.35}
+.modal p{font-size:15px;color:var(--muted);margin-top:8px;line-height:1.65}
+.modal ul{text-align:left;font-size:14px;margin:14px 0 0;padding:12px 14px;background:var(--seg);border-radius:12px;list-style:none}
+.modal li{padding:3px 0 3px 22px;position:relative}
+.modal li::before{content:"✓";position:absolute;left:2px;color:var(--good);font-weight:800}
+.modal .btns{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.modal .btns button{font:inherit;font-size:16px;font-weight:700;border-radius:12px;padding:12px;cursor:pointer;border:0}
+.modal .btns .ok{background:var(--navy);color:#fff}
+.modal .btns .no{background:transparent;color:var(--muted);font-weight:600}
+#map .pin .mug rect{fill:#fff;stroke:#153b46;stroke-width:1.3}
+#map .pin .mug path{fill:none;stroke:#153b46;stroke-width:1.3}
+#map .pin .mug path.foam{fill:#fff}
+#map .pin.sel .mug rect,#map .pin.sel .mug path.foam{fill:#ffd05a;stroke:#ffd05a}
+#map .pin.sel .mug path{stroke:#ffd05a}
+#map .pin.far circle{fill:#e6e9e2}
+.beerpick li{padding:4px 0!important}
+.beerpick .bp{font:inherit;width:100%;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px 6px 6px;cursor:pointer;color:var(--navy);text-align:left}
+.beerpick .bp:hover{border-color:var(--navy)}
+.beerpick img,.beerpick .noimg{width:46px;height:46px;flex:none;border-radius:8px;background:var(--photo);object-fit:contain;padding:3px}
+.beerpick .noimg{display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1.2;color:var(--muted);text-align:center;border:1px dashed #15394655}
+.beerpick .bt{display:flex;flex-direction:column;min-width:0;flex:1}
+.beerpick .bt b{font-size:15px}
+.beerpick .bt small{font-size:12px;color:var(--muted)}
+.beerpick .go{font-size:20px;color:var(--muted)}
+.placeinfo .beer{margin-top:4px;border:0;padding:0;background:transparent}
+.placeinfo .beer .ph{max-width:260px;margin:0 auto}
+.qg{grid-column:1/-1;font-size:14px;color:var(--muted);margin:10px 0 -2px;letter-spacing:.02em}
+.qg:first-child{margin-top:0}
+.actions button.ok{background:var(--navy);color:#fff;font-weight:700}
+.reveal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:50;width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 24px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:28px;box-shadow:0 22px 60px #15394647;padding:26px 24px 22px;text-align:center}
+.reveal[hidden]{display:none}
+.rvx{position:absolute;right:12px;top:10px;border:0;background:none;font-size:28px;line-height:1;color:var(--muted);cursor:pointer;padding:4px 8px;z-index:3}
+/* 무대: 결과 유형별 홉이 장면 (정효림 「결과유형-카테고리」 2026-11-19, 유형 이름은 초안) */
+.rvstage{--s:min(330px,72vw,40vh);width:var(--s);height:var(--s);margin:0 auto;position:relative;border-radius:22px;overflow:hidden;background:var(--photo)}
+.rvstage .scene,.rvstage .scene svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.rvstage .actor{position:absolute;left:31%;bottom:9%;width:38%;height:38%;z-index:2}
+.rvstage .actor img{position:relative;width:100%;height:100%;object-fit:contain;display:block;z-index:1}
+.rvstage .prop{position:absolute;display:none}
+.rvstage.idle{background:transparent}
+.rvstage.idle .actor{left:15%;bottom:6%;width:70%;height:84%}
+/* 공통 움직임 */
+@keyframes enterL{0%{transform:translateX(-170%)}100%{transform:translateX(0)}}
+@keyframes waddle{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg) translateY(-4%)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5%)}}
+@keyframes hopjoy{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-22%) scale(.96,1.04)}60%{transform:translateY(-22%)}85%{transform:translateY(0) scale(1.08,.92)}}
+@keyframes waveX{to{transform:translateX(-25px)}}
+@keyframes steam{0%{opacity:0;transform:translateY(0)}30%{opacity:.9}100%{opacity:0;transform:translateY(-12px)}}
+@keyframes fall{0%{transform:translate(0,-10px) rotate(0)}100%{transform:translate(-14px,110px) rotate(260deg)}}
+@keyframes fly{0%{transform:translateX(-30px)}100%{transform:translateX(130px)}}
+@keyframes sunp{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.scene .wave{animation:waveX 2.4s linear infinite}
+.scene .wave2{animation:waveX 1.6s linear infinite reverse}
+.scene .sun{transform-box:fill-box;transform-origin:center;animation:sunp 2.2s ease-in-out infinite}
+.scene .steam{animation:steam 1.6s ease-out infinite}.scene .steam+.steam{animation-delay:.5s}
+.scene .leaf{animation:fall 3s linear infinite}.scene .leaf:nth-of-type(2n){animation-duration:3.8s;animation-delay:-1.2s}.scene .leaf:nth-of-type(3n){animation-delay:-2.1s}
+.scene .gull{animation:fly 5s linear infinite}.scene .gull+.gull{animation-delay:-2.5s}
+.scene .rock{transform-box:view-box;transform-origin:50px 80px;animation:rockA 2.2s ease-in-out infinite}
+@keyframes rockA{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+/* A 피서: 바닷가로 걸어와 파라솔 아래서 둥실 */
+.sc-A .actor{animation:enterL 1.2s ease-out both}
+.sc-A .actor img{animation:waddle .3s ease-in-out 4,bob 1.6s ease-in-out 1.2s infinite}
+/* B 서핑: 파도 위에서 보드 타기 */
+.sc-B .actor{bottom:20%;animation:surf 1.8s ease-in-out infinite}
+.sc-B .prop{display:block;left:-8%;right:-8%;bottom:-6%;height:16%;border-radius:50%;background:linear-gradient(90deg,#ffd05a,#ff8f5a);border:2px solid #153b46}
+@keyframes surf{0%,100%{transform:translate(-14%,6%) rotate(-10deg)}50%{transform:translate(14%,-10%) rotate(8deg)}}
+/* C 카페거리: 걸어와서 커피 향 맡으며 살랑 */
+.sc-C .actor{left:24%;animation:enterL 1.3s ease-out both}
+.sc-C .actor img{animation:waddle .32s ease-in-out 4,bob 2s ease-in-out 1.3s infinite}
+/* D 시장: 걸어와서 신나게 폴짝 */
+.sc-D .actor{animation:enterL 1.1s ease-out both}
+.sc-D .actor img{animation:waddle .28s ease-in-out 4,hopjoy .8s ease-in-out 1.1s infinite}
+/* E 항구: 배에 타서 출렁 */
+.sc-E .actor{bottom:22%;left:30%;transform-origin:50% 120%;animation:rockA 2.2s ease-in-out infinite}
+/* F 숲길: 천천히 산책 */
+.sc-F .actor{animation:stroll 2.6s ease-out both}
+.sc-F .actor img{animation:waddle .4s ease-in-out 6}
+@keyframes stroll{0%{transform:translateX(-170%)}100%{transform:translateX(18%)}}
+@media (prefers-reduced-motion:reduce){.rvstage *,.rvstage{animation:none!important}}
+.rvtype{margin-top:14px;font-size:14px;font-weight:700;color:var(--gold);min-height:1em}
+.rvcap b{color:var(--good)}
+.rvcap.pop{animation:capPop .5s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes capPop{0%{opacity:0;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}
+.rvbody .top1{display:flex;gap:10px;align-items:center;text-align:left;margin-top:10px;background:var(--photo);border-radius:14px;padding:8px 10px}
+.rvbody .top1 img,.rvbody .top1 .ni{width:52px;height:52px;flex:none;object-fit:contain;border-radius:10px;background:#fff}
+.rvbody .top1 .ni{display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1.2;text-align:center}
+.rvbody .top1 b{color:var(--navy)}
+.rvbody .mates{margin-top:10px;font-size:13px}
+.rvbody .mates span{display:inline-block;margin:3px 2px 0;padding:2px 9px;border-radius:999px;background:var(--chip);color:var(--navy)}
+.rvbody .draft{margin-top:8px;font-size:11.5px}
+.rvcap{margin-top:2px;font-weight:800;font-size:22px;color:var(--navy);line-height:1.35}
+.rvbody{font-size:15px;color:var(--muted);margin-top:4px}
+.rvbody .who{font-size:14px}
+.rvbody .ln{margin-top:8px;color:var(--navy)}
+.rvbody .why{margin-top:6px;font-size:13.5px}
+.rvbody .go{margin-top:14px;font:inherit;font-size:16px;font-weight:700;border:0;border-radius:999px;padding:9px 18px;background:var(--yellow);color:var(--navy);cursor:pointer}
+.qg small{font-weight:400;font-size:12.5px;margin-left:6px}
+.pick{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 14px;border-bottom:1px solid var(--line)}
+.pick button{font:inherit;display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;border:1.5px solid var(--line);background:var(--seg);color:var(--navy);border-radius:14px;padding:8px 14px;cursor:pointer;transition:background .15s,border-color .15s}
+.pick button b{font-size:15px}
+.pick button small{font-size:12px;color:var(--muted)}
+.pick button:hover{border-color:var(--navy)}
+.pick button[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:#fff}
+.pick button[aria-pressed="true"] small{color:#ffffffcc}
+.pick button[aria-pressed="true"] b::before{content:"✓ "}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><span class="brand">부산<i>,</i> 한 잔</span><a class="back" href="cards.html">← 카드뉴스 보기</a></header>
+<h1>오늘 마시고 싶은 맛을 고르면,<br>부산 맥주를 골라 드려요.</h1>
+<p class="lead">맛 3가지·향 5가지와 마시는 느낌(바디감·텍스처·도수)만 고르세요. 맥주 이름을 몰라도 괜찮아요.</p>
+
+<div class="notice">
+<b>먼저 알려 드려요.</b> 맛 칸(쌉쌀함·과일 향 등)은 공식·매장·판매처 설명을 뼈대로, 리뷰에서 같은 말이 3건 이상 나온 것만 덧붙여 팀이 붙인 <b>가설</b>이에요(정효림 「쉬운맛설명-초안」 2026-11-17, 2026-11-18 개정). ‘(리뷰)’·‘(매장)’·‘(판매처)’는 그 칸의 근거가 어디서 왔는지 표시예요. ‘묵직함’은 리뷰 2건 이상이면 넣는 예외 기준으로 로겐 1종에만 붙어 있어요(쉬운맛설명-초안 2026-11-19, ‘리뷰, 엇갈림’).
+같은 맥주라도 출처마다 숫자가 다르면 <b>둘 다</b> 보여 줘요. 사진은 각 양조장 공식 홈페이지의 제품 사진이고(2026-11-18 확인), 공식 사진을 찾지 못한 맥주는 ‘사진 정보 없음’으로 표시해요.
+판매 여부·영업은 2026-11-16~17 팀 조사 기준이라 지금과 다를 수 있어요. 방문 전 매장 공지를 확인해 주세요.
+</div>
+
+<section class="panel" aria-labelledby="q-title">
+<h2 id="q-title">취향 고르기</h2>
+<p class="hint">맛·향은 끌리는 걸 눌러서 여러 개 고르세요(다시 누르면 취소). 마시는 느낌은 모르겠으면 ‘상관없음’으로 두세요.</p>
+<div class="qgrid" id="questions"></div>
+<div class="actions"><button type="button" class="ok" id="confirmBtn">확인 · 추천 받기</button><button type="button" id="reset">처음으로</button></div>
+</section>
+
+<section class="panel" aria-labelledby="loc-title">
+<h2 id="loc-title">내 위치와 근처 매장</h2>
+<p class="hint">위치를 정하면 가까운 매장 기준으로 추천 순서를 바꿔 드려요. 지도를 눌러서 위치를 정해도 돼요.</p>
+<div class="locctl">
+<button type="button" class="main" id="geoBtn">현재 위치 쓰기</button>
+<select id="areaSel" aria-label="지역 고르기"></select>
+<span class="seg" role="group" aria-label="가까운 기준" id="limitSeg"></span>
+<button type="button" id="clearLoc">위치 지우기</button>
+</div>
+<p class="locmsg" id="locMsg" aria-live="polite"></p>
+<div class="mapwrap">
+<div><svg id="map" viewBox="0 0 600 512" role="img" aria-label="부산 맥주 매장 지도"></svg>
+<p class="mapnote">대략 그린 부산 지도예요. 매장 점은 주소를 보고 어림잡은 위치라 실제와 조금 다를 수 있어요. [확인 필요: 매장 좌표]</p></div>
+<div class="placeinfo" id="placeInfo"></div>
+</div>
+</section>
+
+
+<div class="reveal" id="reveal" role="dialog" aria-modal="false" aria-labelledby="rvTitle" hidden>
+<button type="button" class="rvx" id="rvClose" aria-label="닫기">×</button>
+<div class="rvstage" id="rvStage"><div class="scene" id="rvScene"></div>
+<div class="actor" id="rvActor"><span class="prop" id="rvProp"></span><img src="images/hop_mascot.png" alt="홉이"></div></div>
+<p class="rvtype" id="rvType"></p>
+<p class="rvcap" id="rvTitle">취향에 맞는 맥주를 찾는 중…</p>
+<div class="rvbody" id="rvBody"></div>
+</div>
+<div class="banner" id="banner" aria-live="polite"></div>
+<p class="summary" id="summary" aria-live="polite"></p>
+<div class="list" id="list"></div>
+<div class="excluded" id="excluded"></div>
+
+<footer class="foot">
+가칭·준비 중인 서비스 시안이에요. 매장 제휴나 광고가 아니에요. 점수는 고른 취향과 맛 칸이 얼마나 맞는지만 센 것이고, 맛의 좋고 나쁨이 아니에요.<br>
+점수 규칙: 고른 맛·향이 들어 있으면 하나당 +2, 원하는 바디감·텍스처면 +2, 원하는 도수 범위면 +1. ‘(리뷰)’ 등이 붙은 칸도 똑같이 셉니다.<br>
+제품 사진의 권리는 각 양조장에 있어요. 수업용 시안이며, 외부에 공개할 때는 양조장 허락이 필요해요.<br>
+위치 기능: 위치를 정하면 고른 시간(30분 이내·1시간 이내, 기본 30분) 안에 갈 수 있는 매장의 맥주를 먼저 보여 줘요. 시간은 직선거리로 어림잡은 대중교통 시간(8분 + 거리×1.3÷시속 25km)이고, 매장 좌표도 주소를 보고 어림잡은 값이에요. 위치 정보는 이 화면 안에서만 쓰고 어디에도 저장하지 않아요.<br>
+성인 대상이에요. 지나친 음주는 건강에 해로워요. 음주 후 운전하지 마세요.
+</footer>
+</div>
+
+<div class="modal" id="permModal" hidden role="dialog" aria-modal="true" aria-labelledby="permTitle">
+<div class="box">
+<div class="ico" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#153b46" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
+<h3 id="permTitle">내 위치를 써도 될까요?</h3>
+<p>가까운 매장에서 마실 수 있는 부산 맥주를 먼저 추천해 드리려고 해요.</p>
+<ul>
+<li>위치는 이 화면에서 거리 계산에만 써요.</li>
+<li>어디에도 저장하거나 보내지 않아요.</li>
+<li>다음 화면에서 브라우저가 한 번 더 물어봐요.</li>
+</ul>
+<div class="btns">
+<button type="button" class="ok" id="permOk">허용하기</button>
+<button type="button" class="no" id="permNo">다음에 할게요</button>
+</div>
+</div>
+</div>
+
+<script>
+/* 근거: 정효림 beer-project/쉬운맛설명-초안-2026-11-17.md, 공식-맛설명-2026-11-16.md, 맛리뷰-수집-조사결과-2026-11-17.md,
+   수제맥주-판매처-조사결과-2026-11-17.md, 갈매기브루잉-2026-11-16.md, 새-브루어리-후보-2026-11-17.md
+   사진: 각 공식 홈페이지에서 2026-11-18 내려받아 눈으로 확인 (images/ 폴더) */
+const TAG_KO={bitter:"쌉쌀함",sweet:"단맛",sour:"산미",fruity:"과일 향",malty:"고소한 향",roast:"커피/초콜릿/캐러멜",spicy:"알싸함",herbal:"허브 향",light:"가벼움",heavy:"묵직함",smooth:"부드러움",crisp:"청량감"};
+/* 맛 칸 이름에 (리뷰)·(매장)·(판매처)·세기 표시를 붙임 */
+const tagName=(b,k)=>TAG_KO[k]+(b.ts&&b.ts[k]?`(${b.ts[k]})`:"");
+
+/* 가게 위치 (양조장별 대표 매장) */
+const STORES={
+ "갈매기브루잉":{where:"해운대점 · 부산 해운대구 해운대해변로265번길 9",also:"남포점 · 부산 중구 광복로 21-3",map:"https://pcmap.place.naver.com/restaurant/37337102/home",src:"소상공인시장진흥공단 상가정보 2026-09판 48989행·98610행 (정효림 확인 2026-11-16)"},
+ "고릴라브루잉":{where:"비치점 · 부산 해운대구 달맞이길 30",also:"해운대점 · 부산 해운대구 해운대로570번길 46",map:"https://pcmap.place.naver.com/restaurant/1372438535/home",src:"네이버 지도 (팀 조사 2026-11-17). 비치점 건물 이름은 출처마다 ‘포디움동’ / ‘랜드마크타워동’으로 달라요"},
+ "와일드캣브루잉":{where:"서면 본점 · 부산 부산진구 신천대로62번길 2",map:"https://pcmap.place.naver.com/restaurant/1749159642/home",src:"팀 딥리서치 결과 (2026-11-16) [확인 필요: 주소 원문]"},
+ "부산맥주":{where:"미포 탭룸 · 부산 해운대구 달맞이길62번길 38 미포씨랜드 1층",map:"https://pcmap.place.naver.com/restaurant/2088238244/home",src:"네이버 지도 (팀 조사 2026-11-17). 양조장은 경남 양산으로 옮겼다는 자료가 있어요"},
+ "툼브로이":{where:"송정 본점 · 부산 해운대구 해운대로 1244 (송정동 82-8)",map:"https://pcmap.place.naver.com/restaurant/1791164031/home",src:"네이버 지도·비짓부산 (팀 조사 2026-11-17). 휴무는 ‘매주 월요일’ / ‘월·화·수’로 출처마다 달라요"},
+ "허심청브로이":{where:"호텔농심 · 부산 동래구 금강공원로20번길 23",map:"https://pcmap.place.naver.com/restaurant/31558252/home",src:"이벤터스 행사 페이지 (확인 2026-11-18). 공식 안내: 월요일 휴무"},
+ "프라하993":{where:"F1963 · 부산 수영구 구락로123번길 20 (망미동)",map:"https://pcmap.place.naver.com/restaurant/860462240/home",src:"프라하993 공식 페이지 (확인 2026-11-17)"},
+ "오시게":{where:"온천장본점 · 부산 동래구 온천천로 11",map:"https://pcmap.place.naver.com/restaurant/1788417796/home",src:"오시게 인스타그램 소개 (팀 조사 2026-11-16)"},
+ "허거스":{where:"남천동 · 부산 수영구 광남로48번길 49 1층",map:"https://pcmap.place.naver.com/restaurant/1896991046/home",src:"네이버 지도 (팀 조사 2026-11-17)"}
+};
+const CREDIT={g:"갈매기브루잉 공식 홈페이지",r:"고릴라브루잉 공식 홈페이지",w:"와일드캣브루잉 공식 홈페이지",n:"호텔농심 공식 홈페이지",p:"프라하993 공식 홈페이지"};
+
+const GALMEGI_OFF={label:"갈매기 공식 BEERS (확인 2026-11-18)",url:"https://www.galmegibrewing.com/beers"};
+const GALMEGI_STORE={label:"갈매기 해운대점 메뉴 (갱신 2026-05-29)",url:"https://pcmap.place.naver.com/restaurant/37337102/menu/list"};
+const NONGSHIM={label:"호텔농심 브로이맥주 공식",url:"https://www.hotelnongshim.com/kr/index.php?pCode=Broybeer_beer"};
+const TUMB_STORE={label:"툼브로이 매장 메뉴 (갱신 2026-10-25)",url:"https://pcmap.place.naver.com/restaurant/1791164031/menu/list"};
+const WILDCAT={label:"와일드캣 공식 메뉴 (메뉴 확인일 2026-09-08)",url:"https://wildcatbeer.co.kr/menu.html"};
+const BUSANBEER_STORE={label:"부산맥주(미포) 매장 메뉴 (갱신 2026-05-23)",url:"https://pcmap.place.naver.com/restaurant/2088238244/menu/list"};
+
+const BEERS=[
+{name:"부산라거",brewery:"갈매기브루잉",style:"라거",img:"images/galmegi_lager.png",cr:"g",
+ abv:[{v:4.5,s:"공식·매장"}],ibu:[{v:25,s:"공식"},{v:15,s:"매장"}],
+ line:"가볍고 청량하게 넘어가는 깔끔한 라거",tags:["light","crisp"],quote:"“가벼움, 깔끔함, 청량함” (매장)",src:[GALMEGI_OFF,GALMEGI_STORE]},
+{name:"갈매기 IPA",brewery:"갈매기브루잉",style:"IPA",img:"images/galmegi_ipa.png",cr:"g",
+ abv:[{v:6.5,s:"공식"}],ibu:[{v:50,s:"공식"},{v:65,s:"매장"}],
+ line:"쌉쌀함에 감귤 같은 과일 향이 어우러지는 IPA, 생각보다 가볍게 넘어감",tags:["bitter","fruity","light"],ts:{light:"리뷰"},extra:"홉 향",quote:"“홉의 향, 쓴맛, 약간의 과일 향” (매장)",src:[GALMEGI_OFF,GALMEGI_STORE]},
+{name:"유자 고제",brewery:"갈매기브루잉",style:"고제(사워)",img:"images/galmegi_yuja.png",cr:"g",
+ abv:[{v:4.5,s:"공식"},{v:5.0,s:"매장"}],ph:[{v:3.3,s:"공식"},{v:3.5,s:"매장"}],
+ line:"유자·레몬 향에 새콤하고 끝에 살짝 짭짤한, 상쾌한 맥주",tags:["sour","fruity","crisp"],ts:{crisp:"리뷰"},extra:"짠맛",quote:"“신맛, 약간의 짠 맛, 유자맛” (매장)",src:[GALMEGI_OFF,GALMEGI_STORE]},
+{name:"쥬시 해",brewery:"갈매기브루잉",style:"스타일 표기 없음",img:"images/galmegi_juicy.png",cr:"g",
+ abv:[{v:6.5,s:"공식"}],ibu:[{v:20,s:"공식"},{v:30,s:"매장"}],
+ line:"열대과일 즙처럼 과즙 가득하고 달콤한 탁한 IPA. 마신 사람들: 쌉쌀함은 약한 편",tags:["sweet","bitter","fruity"],ts:{bitter:"약함·리뷰"},quote:"“과즙같은, 열대과일, 달콤한” (매장)",src:[GALMEGI_OFF,GALMEGI_STORE]},
+{name:"고릴라 아이피에이",brewery:"고릴라브루잉",style:"IPA",img:"images/gorilla_ipa.png",cr:"r",
+ abv:[{v:5.4,s:"공식"}],
+ line:"캐러멜 같은 맥아 위에 쌉쌀함과 열대과일 향이 터지는 IPA. 마신 사람들: IPA치고 홉·쌉쌀함이 약한 편",tags:["bitter","sweet","fruity","roast"],ts:{roast:"캐러멜"},quote:"“a balance of caramel and spikey, bitter, tropical bursts” (공식)",src:[{label:"고릴라 공식 GORILLA IPA",url:"https://www.gorillabrewingcompany.com/gorilla-ipa"},{label:"고릴라 비치점 메뉴 (갱신 2026-05-13)",url:"https://pcmap.place.naver.com/restaurant/1372438535/menu/list"}]},
+{name:"고릴라거",brewery:"고릴라브루잉",style:"라거",img:"images/gorilla_lager.png",cr:"r",
+ abv:[{v:4.7,s:"공식 개별 페이지"},{v:4.3,s:"공식 목록"}],
+ line:"맥아 향이 은은하고 깔끔하게 넘어가는, 편하게 마시는 라거",tags:["sweet","malty","crisp"],ts:{sweet:"매장"},quote:"“crisp, malty, and eminently drinkable” (공식)",src:[{label:"고릴라 공식 GORILLAGER",url:"https://www.gorillabrewingcompany.com/gorillager"},{label:"고릴라 공식 Core Collection",url:"https://www.gorillabrewingcompany.com/core-collection"}]},
+{name:"라즈베리 위트",brewery:"고릴라브루잉",style:"밀맥주",img:"images/gorilla_rasp.png",cr:"r",
+ abv:[{v:6.2,s:"공식"}],
+ line:"라즈베리 향 가득, 새콤하고 부드러운 밀맥주. 마신 사람들: 상쾌하다",tags:["sour","fruity","smooth","crisp"],ts:{crisp:"리뷰"},quote:"“Creamy and jam-packed with raspberries for a fruity, tart twist” (공식)",src:[{label:"고릴라 공식 RASPBERRY WHEAT",url:"https://www.gorillabrewingcompany.com/raspberry-wheat"}]},
+{name:"브리티시 스타우트",brewery:"고릴라브루잉",style:"스타우트(흑맥주)",img:"images/gorilla_stout.png",cr:"r",
+ abv:[{v:6.3,s:"공식"}],
+ line:"커피와 초콜릿 향에 단맛이 살짝 도는 흑맥주. 마신 사람들: 흑맥주치고 묽고 가벼운 편",tags:["sweet","bitter","roast","light"],ts:{light:"리뷰"},quote:"“at once chocolately-sweet and espresso-bitter” (공식)",src:[{label:"고릴라 공식 BRITISH STOUT",url:"https://www.gorillabrewingcompany.com/british-stout"}]},
+{name:"고릴라 뉴잉",brewery:"고릴라브루잉",style:"뉴잉글랜드 IPA",img:"images/gorilla_newing.png",cr:"r",
+ abv:[{v:7.0,s:"공식"}],
+ line:"귤·패션프루트 향이 주스처럼 향긋하고 가볍게 마시는 IPA",tags:["fruity","light"],ts:{light:"판매처"},extra:"차 향",note:"바디감 설명이 둘: 판매처 ‘가볍게’ / 리뷰 1건 ‘묵직한 끝맛’(리뷰 1건이라 맛 칸에는 안 넣음)",quote:"“hints of tangerine and passion fruit” (공식)",src:[{label:"고릴라 공식 NEWING",url:"https://www.gorillabrewingcompany.com/gorilla-newing"},{label:"데일리샷 판매 페이지",url:"https://dailyshot.co/m/item/19137?item=122525"}]},
+{name:"파인애플 웨이브 고제",brewery:"고릴라브루잉",style:"고제(사워)",img:"images/gorilla_pineapple.png",cr:"r",
+ abv:[{v:7.2,s:"공식·판매처"}],
+ line:"파인애플 향에 상큼하고 시원한 고제. 마신 사람들: 고제치고 짠맛·새콤함이 약한 편",tags:["sour","fruity","crisp"],extra:"바질 · 짠맛(약함, 리뷰)",note:"리뷰 3건은 ‘고제치고 신맛·짠맛이 약하다’고 함",quote:"“파인애플과 바질을 풍부하게 넣고 발효해 고제 특유의 상큼함과 시원함을 선사” (판매처)",src:[{label:"고릴라 공식 한정 출시 목록",url:"https://www.gorillabrewingcompany.com/current-limited-releases"},{label:"데일리샷 판매 페이지",url:"https://dailyshot.co/m/item/23821?item=207787"}]},
+{name:"빅토리 라거",brewery:"와일드캣브루잉",style:"라거",img:"images/wildcat_victory.jpg",cr:"w",
+ line:"쌀로 빚어 가볍고 청량한 라거, 마신 사람들 말로는 라거치고 홉 향이 또렷함",tags:["light","crisp"],extra:"쌀 · 홉 향",quote:"“가벼운 바디와 은은한 캘리포니아 홉 향을 담은 산뜻한 라거” (공식)",src:[{label:"와일드캣 공식",url:"https://wildcatbeer.co.kr/"},WILDCAT]},
+{name:"와일드캣 IPA",brewery:"와일드캣브루잉",style:"IPA",img:"images/wildcat_ipa.jpg",cr:"w",
+ line:"몸은 가볍고 홉 향이 선명한 IPA",tags:["light"],extra:"쌀 · 홉 향",quote:"“한국 쌀로 빚은 가벼운 바디에 캘리포니아 홉의 선명한 향” (공식)",src:[{label:"와일드캣 공식",url:"https://wildcatbeer.co.kr/"},WILDCAT]},
+{name:"와일드캣 페일 에일",brewery:"와일드캣브루잉",style:"페일 에일",img:"images/wildcat_pale.jpg",cr:"w",
+ line:"유자·시트러스 향에 생강이 어우러진 경쾌한 페일 에일",tags:["fruity","crisp"],extra:"생강",quote:"“한국 유자와 생강, 시트러스 계열 홉의 향이 어우러지는 경쾌한 페일 에일” (공식)",src:[{label:"와일드캣 공식",url:"https://wildcatbeer.co.kr/"},WILDCAT]},
+{name:"오륙도페일라거",brewery:"부산맥주",style:"라거",
+ abv:[{v:4.5,s:"판매처"}],
+ line:"쌉쌀하고 맥아 향이 받쳐 주는, 탄산이 시원한 깔끔한 라거",tags:["bitter","malty","crisp"],extra:"홉 향",quote:"Taste “쌉쌀한, 균형 잡힌, 맥아” (판매처)",src:[BUSANBEER_STORE,{label:"데일리샷 판매 페이지",url:"https://dailyshot.co/m/item/16299"}]},
+{name:"부산IPA",brewery:"부산맥주",style:"IPA",
+ line:"맛과 향이 깊고 강한 IPA",tags:[],extra:"맛·향 세기 강함",note:"맛 설명이 짧아요",quote:"“깊고 강한 맛과 향을 가진 IPA” (매장)",src:[BUSANBEER_STORE]},
+{name:"헬레스",brewery:"툼브로이",style:"독일식 페일 라거",
+ abv:[{v:4.8,s:"판매처"}],
+ line:"고소한 맥아 향에 청량하고 깔끔한 독일식 라거",tags:["malty","light","crisp"],ts:{light:"판매처"},quote:"Taste “고소한, 깔끔한, 청량감” (판매처)",src:[TUMB_STORE,{label:"데일리샷 판매 페이지",url:"https://dailyshot.co/m/item/22385?item=190156"}]},
+{name:"로겐",brewery:"툼브로이",style:"로겐(호밀 맥주)",
+ abv:[{v:4.4,s:"매장"}],ibu:[{v:17,s:"매장"}],
+ line:"호밀빵처럼 구수한 맥아 향에 살짝 알싸함이 도는 호밀 맥주",tags:["malty","spicy","heavy"],ts:{heavy:"리뷰, 엇갈림"},quote:"“구수함이 느껴지는 바디감과 함께 느껴지는 재미난 알싸함까지.” (매장 메뉴판)",src:[TUMB_STORE]},
+{name:"바이스",brewery:"툼브로이",style:"밀맥주",
+ line:"바나나 향이 진하고 달큰하며 부드러운 밀맥주. 마신 사람들: 정향 같은 은은한 향신료 향",tags:["sweet","fruity","spicy","smooth"],ts:{spicy:"리뷰"},quote:"“달큰한 바나나향과 부드러운 질감을 지닌 독일 남부식 밀맥주” (매장)",src:[TUMB_STORE]},
+{name:"필스",brewery:"허심청브로이",style:"라거(필스너)",img:"images/nongshim_pils.png",cr:"n",
+ abv:[{v:4.8,s:"공식"}],ibu:[{v:15,s:"공식"}],
+ line:"쌉쌀하면서 뒷맛이 깔끔한, 부담 없는 독일식 라거",tags:["bitter"],quote:"“쌉쌀하면서 깔끔한 뒷맛이 일품인 맥주” (공식)",src:[NONGSHIM]},
+{name:"둔켈",brewery:"허심청브로이",style:"흑맥주(라거)",img:"images/nongshim_dunkel.png",cr:"n",
+ abv:[{v:4.8,s:"공식"}],ibu:[{v:15,s:"공식"}],
+ line:"볶은 맥아의 구수한 맛과 부드러운 향의 흑맥주",tags:["malty"],quote:"“부드러운 향과 구수한 맛이 매력적인 맥주” (공식)",src:[NONGSHIM]},
+{name:"Praha993 IPA",brewery:"프라하993",style:"IPA",img:"images/praha_ipa.jpg",cr:"p",
+ abv:[{v:6,s:"공식"}],ibu:[{v:47,s:"공식"}],
+ line:"몸은 가볍고 허브 같은 단맛에 끝이 산뜻한 IPA",tags:["sweet","herbal","light","crisp"],quote:"“lighter in body … herbal sweetness and crisp finish” (공식)",src:[{label:"프라하993 공식 BEER",url:"https://praha993.kr/beer/"}]},
+{name:"오시게 바이젠",brewery:"오시게",style:"밀맥주",
+ abv:[{v:4.5,s:"매장"}],
+ line:"목넘김이 부드러운 독일식 밀맥주",tags:["smooth"],quote:"“부드러운 목넘김이 특징인 독일식 밀맥주” (매장 메뉴판)",src:[{label:"오시게 온천장본점 메뉴 (갱신 2026-11-05)",url:"https://pcmap.place.naver.com/restaurant/1788417796/menu/list"}]},
+{name:"골든 라이스 라거",brewery:"허거스",style:"라거",
+ abv:[{v:4.2,s:"매장"}],
+ line:"가볍고 청량한, 깔끔한 쌀 라거",tags:["light","crisp"],extra:"쌀",quote:"“#깔끔함 #청량함 #가벼움” (매장)",src:[{label:"허거스 매장 메뉴 (갱신 2026-11-16)",url:"https://pcmap.place.naver.com/restaurant/1896991046/menu/list"}]}
+];
+
+/* 취향 질문: 정효림 「쉬운맛설명-초안」 0절 맛 칸 + 팀 결정 F2(2026-11-19 합의, '묵직함' 뺌) */
+const QUESTIONS=[
+ {key:"bitter",label:"쌉쌀함",sub:"홉의 쌉쌀한 맛",type:"taste",g:"맛"},
+ {key:"sweet",label:"단맛",sub:"달큰함",type:"taste",g:"맛"},
+ {key:"sour",label:"산미",sub:"새콤한 맛",type:"taste",g:"맛"},
+ {key:"fruity",label:"과일 향",sub:"유자·감귤·열대과일 등",type:"taste",g:"향"},
+ {key:"malty",label:"고소한 향",sub:"맥아·빵·곡물",type:"taste",g:"향"},
+ {key:"roast",label:"커피/초콜릿/캐러멜",sub:"볶은 맥아·흑맥주 향",type:"taste",g:"향"},
+ {key:"spicy",label:"알싸함",sub:"정향·후추 같은 향신료 향",type:"taste",g:"향"},
+ {key:"herbal",label:"허브 향",sub:"풀·꽃 향",type:"taste",g:"향"},
+ {key:"body",label:"바디감",sub:"입안에서 느끼는 무게",type:"body",g:"마시는 느낌"},
+ {key:"texture",label:"텍스처",sub:"부드러움 ↔ 청량감",type:"texture",g:"마시는 느낌"},
+ {key:"abv",label:"도수",sub:"알코올 농도(ABV)",type:"abv",g:"마시는 느낌"}
+];
+const OPTS={
+ body:[["any","상관없음",""],["light","가벼운 쪽","like"],["heavy","묵직한 쪽","like"]],
+ texture:[["any","상관없음",""],["smooth","부드러운 쪽","like"],["crisp","청량한 쪽","like"]],
+ abv:[["any","상관없음",""],["low","낮게 4.5%↓",""],["mid","보통",""],["high","높게 6%↑",""]]
+};
+const TOP=3;
+const state={};
+let showMore=false;
+QUESTIONS.forEach(q=>state[q.key]="any");
+
+function renderQuestions(){
+ /* 맛·향: 눌러서 여러 개 고르기(다시 누르면 해제) / 마시는 느낌: 하나만 고르기 */
+ const box=document.getElementById("questions");
+ const groups=[...new Set(QUESTIONS.map(q=>q.g))];
+ box.innerHTML=groups.map(g=>{
+  const qs=QUESTIONS.filter(q=>q.g===g);
+  if(qs[0].type==="taste")return `<h3 class="qg">${g} <small>끌리는 걸 모두 골라 주세요 · 여러 개 가능</small></h3><div class="pick" role="group" aria-label="${g}">${qs.map(q=>`<button type="button" data-k="${q.key}" aria-pressed="${state[q.key]==="like"}"><b>${q.label}</b><small>${q.sub}</small></button>`).join("")}</div>`;
+  return `<h3 class="qg">${g}</h3>`+qs.map(q=>`<div class="q"><div class="label"><b>${q.label}</b><small>${q.sub}</small></div><div class="seg" role="group" aria-label="${q.label}">${OPTS[q.type].map(([v,t,c])=>`<button type="button" class="${c}" data-k="${q.key}" data-v="${v}" aria-pressed="${state[q.key]===v}">${t}</button>`).join("")}</div></div>`).join("");
+ }).join("");
+ box.querySelectorAll(".pick button").forEach(b=>b.onclick=()=>{const k=b.dataset.k;state[k]=state[k]==="like"?"any":"like";showMore=false;renderQuestions();recommend();});
+ box.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{state[b.dataset.k]=b.dataset.v;showMore=false;renderQuestions();recommend();});
+}
+
+const abvBand={low:v=>v<=4.5,mid:v=>v>4.5&&v<6,high:v=>v>=6};
+const chips=(arr,unit,label)=>!arr||!arr.length?"":`<span class="${arr.length>1?"two":""}">${label} ${arr.map(x=>`${x.v}${unit} (${x.s})`).join(" / ")}</span>`;
+function specLine(b){
+ const parts=[];let two=false;
+ if(b.abv){parts.push(`ABV ${b.abv.map(x=>x.v).join(" / ")}`);two=two||b.abv.length>1;} else parts.push("ABV 정보 없음");
+ if(b.ibu){parts.push(`${b.ibu.map(x=>x.v).join(" / ")} IBUs`);two=two||b.ibu.length>1;}
+ if(b.ph){parts.push(`pH ${b.ph.map(x=>x.v).join(" / ")}`);two=two||b.ph.length>1;}
+ return parts.join(" · ")+(two?` <small>출처마다 다름</small>`:"");
+}
+
+function scoreBeer(b){
+ let score=0;const why=[];
+ QUESTIONS.filter(q=>q.type==="taste").forEach(({key:k})=>{
+  const has=b.tags.includes(k);
+  if(state[k]==="like"&&has){score+=2;why.push(["p",`${tagName(b,k)} 골랐음 → 맞음 +2`]);}
+ });
+ ["body","texture"].forEach(q=>{
+  const want=state[q];
+  if(want!=="any"&&b.tags.includes(want)){score+=2;why.push(["p",`${tagName(b,want)} 원함 → 맞음 +2`]);}
+ });
+ if(state.abv!=="any"){
+  if(!b.abv){why.push(["",`도수 정보 없음 (확인 필요)`]);}
+  else if(b.abv.some(x=>abvBand[state.abv](x.v))){score+=1;why.push(["p",`도수가 원하는 범위 +1`]);}
+  else why.push(["",`도수가 원하는 범위 밖`]);
+ }
+ return {score,why};
+}
+
+/* ───── 내 위치·지도 ─────
+   매장 좌표는 위 STORES 주소를 보고 어림잡은 값이에요 [확인 필요: 매장 좌표].
+   이동 시간 = 8분 + 직선거리(km) × 1.3(길 굽음) ÷ 시속 25km(대중교통 어림). 실제 길찾기가 아니에요. */
+const SHORT={"갈매기브루잉":"갈매기","고릴라브루잉":"고릴라","와일드캣브루잉":"와일드캣","부산맥주":"부산맥주","툼브로이":"툼브로이","허심청브로이":"허심청","프라하993":"프라하993","오시게":"오시게","허거스":"허거스"};
+const nsearch=a=>"https://map.naver.com/p/search/"+encodeURIComponent(a);
+const PLACES=[
+ {b:"갈매기브루잉",n:"해운대점",addr:"부산 해운대구 해운대해변로265번길 9",lat:35.1607,lng:129.1617,dx:5,dy:51,a:"start",map:"https://pcmap.place.naver.com/restaurant/37337102/home"},
+ {b:"갈매기브루잉",n:"남포점",addr:"부산 중구 광복로 21-3",lat:35.0988,lng:129.0302,dx:-10,dy:18,a:"end",map:nsearch("갈매기브루잉 남포점")},
+ {b:"고릴라브루잉",n:"비치점",addr:"부산 해운대구 달맞이길 30",lat:35.1605,lng:129.1693,dx:-11,dy:68,a:"start",map:"https://pcmap.place.naver.com/restaurant/1372438535/home"},
+ {b:"고릴라브루잉",n:"해운대점",addr:"부산 해운대구 해운대로570번길 46",lat:35.1636,lng:129.1585,dx:11,dy:41,a:"start",map:nsearch("고릴라브루잉 해운대점")},
+ {b:"와일드캣브루잉",n:"서면 본점",addr:"부산 부산진구 신천대로62번길 2",lat:35.156,lng:129.063,dx:9,dy:-8,a:"start",map:"https://pcmap.place.naver.com/restaurant/1749159642/home"},
+ {b:"부산맥주",n:"미포 탭룸",addr:"부산 해운대구 달맞이길62번길 38",lat:35.1598,lng:129.173,dx:-18,dy:83,a:"start",map:"https://pcmap.place.naver.com/restaurant/2088238244/home"},
+ {b:"툼브로이",n:"송정 본점",addr:"부산 해운대구 해운대로 1244",lat:35.1795,lng:129.1985,dx:-9,dy:-12,a:"end",map:"https://pcmap.place.naver.com/restaurant/1791164031/home"},
+ {b:"허심청브로이",n:"호텔농심",addr:"부산 동래구 금강공원로20번길 23",lat:35.22,lng:129.081,dx:-10,dy:-6,a:"end",map:"https://pcmap.place.naver.com/restaurant/31558252/home"},
+ {b:"프라하993",n:"F1963",addr:"부산 수영구 구락로123번길 20",lat:35.1768,lng:129.113,dx:9,dy:-9,a:"start",map:"https://pcmap.place.naver.com/restaurant/860462240/home"},
+ {b:"오시게",n:"온천장본점",addr:"부산 동래구 온천천로 11",lat:35.2165,lng:129.0865,dx:9,dy:16,a:"start",map:"https://pcmap.place.naver.com/restaurant/1788417796/home"},
+ {b:"허거스",n:"남천동",addr:"부산 수영구 광남로48번길 49",lat:35.144,lng:129.114,dx:10,dy:8,a:"start",map:"https://pcmap.place.naver.com/restaurant/1896991046/home"}
+];
+const AREAS=[["부산역",35.1152,129.0422],["남포동",35.098,129.033],["서면",35.1578,129.0594],["연산동",35.186,129.082],["동래",35.2058,129.0785],["부산대",35.23,129.089],["광안리",35.1532,129.1187],["경성대·부경대",35.1373,129.1003],["센텀시티",35.169,129.132],["해운대",35.1631,129.1636],["송정",35.179,129.2],["기장",35.2445,129.2187],["사상",35.1622,128.9846],["하단",35.1063,128.9668],["덕천",35.2104,129.005],["영도",35.091,129.068]];
+const geo={me:null,limit:30,sel:null,beer:null}; /* limit: 30·60분, null=상관없음 */
+const limText=L=>L===60?"1시간":L+"분";
+const isNear=m=>geo.limit===null||m<=geo.limit;
+const BOUNDS={w:128.93,e:129.23,n:35.25,s:35.04,W:600,H:512};
+const px=(lat,lng)=>[(lng-BOUNDS.w)/(BOUNDS.e-BOUNDS.w)*BOUNDS.W,(BOUNDS.n-lat)/(BOUNDS.n-BOUNDS.s)*BOUNDS.H];
+const PX_PER_KM=BOUNDS.W/((BOUNDS.e-BOUNDS.w)*111.32*Math.cos(35.15*Math.PI/180));
+function km(a,b){const R=6371,r=Math.PI/180,dLa=(b.lat-a.lat)*r,dLo=(b.lng-a.lng)*r;const h=Math.sin(dLa/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
+const minutes=k=>Math.round(8+k*1.3/25*60);
+const radiusKm=m=>Math.max(0,(m-8)*25/60/1.3);
+function nearestOf(brewery){
+ return PLACES.filter(p=>p.b===brewery).map(p=>{const k=km(geo.me,p);return {p,km:k,min:minutes(k)};}).sort((x,y)=>x.min-y.min)[0];
+}
+const placeName=p=>`${SHORT[p.b]} ${p.n}`;
+/* 받침 따라 조사 고르기 (예: 둔켈을 / 부산라거를, 고릴라거예요 / 둔켈이에요) */
+function hasJong(w){const c=w.trim().slice(-1).charCodeAt(0);if(c>=0xAC00&&c<=0xD7A3)return (c-0xAC00)%28!==0;return /[0-9LMNlmn]$/.test(w.trim());}
+const eul=w=>w+(hasJong(w)?"을":"를"), yeyo=w=>w+(hasJong(w)?"이에요":"예요");
+
+function renderMap(){
+ const P=pts=>pts.map(([lo,la])=>px(la,lo).map(v=>v.toFixed(1)).join(",")).join(" ");
+ const land=P([[128.93,35.25],[129.23,35.25],[129.23,35.205],[129.215,35.19],[129.2,35.177],[129.185,35.165],[129.17,35.157],[129.155,35.156],[129.148,35.152],[129.135,35.157],[129.12,35.15],[129.117,35.135],[129.124,35.118],[129.11,35.109],[129.095,35.114],[129.08,35.104],[129.068,35.111],[129.05,35.109],[129.04,35.1],[129.03,35.092],[129.02,35.08],[129.01,35.066],[128.995,35.06],[128.985,35.046],[128.97,35.049],[128.965,35.07],[128.955,35.09],[128.945,35.1],[128.93,35.1]]);
+ const yd=P([[129.035,35.088],[129.06,35.091],[129.075,35.081],[129.08,35.066],[129.07,35.051],[129.05,35.055],[129.035,35.07]]);
+ const river=P([[128.985,35.25],[128.975,35.2],[128.972,35.15],[128.965,35.11],[128.958,35.09]]);
+ const gu=[["해운대구",129.17,35.215],["수영구",129.128,35.166],["남구",129.093,35.128],["부산진구",129.04,35.172],["동래구",129.068,35.214],["중구",129.02,35.11],["영도",129.055,35.072],["사상구",128.99,35.17]];
+ let s=`<polygon class="land" points="${land}"/><polygon class="land" points="${yd}"/><polyline class="river" points="${river}"/>`;
+ s+=gu.map(([t,lo,la])=>{const [x,y]=px(la,lo);return `<text class="gu" x="${x.toFixed(0)}" y="${y.toFixed(0)}" text-anchor="middle">${t}</text>`;}).join("");
+ {const [x,y]=px(35.075,129.15);s+=`<text class="sea" x="${x.toFixed(0)}" y="${y.toFixed(0)}" text-anchor="middle">바 다</text>`;}
+ if(geo.me&&geo.limit!==null){const [x,y]=px(geo.me.lat,geo.me.lng);s+=`<circle class="range" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(radiusKm(geo.limit)*PX_PER_KM).toFixed(1)}"/>`;}
+ PLACES.forEach((p,i)=>{
+  const [x,y]=px(p.lat,p.lng),lx=x+p.dx,ly=y+p.dy;
+  const far=geo.me&&!isNear(minutes(km(geo.me,p)));
+  const lead=Math.abs(p.dy)>20?`<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(lx+(p.a==="end"?4:-4)).toFixed(1)}" y2="${(ly-4).toFixed(1)}"/>`:"";
+  s+=`<g class="pin${far?" far":""}${geo.sel===i?" sel":""}" data-i="${i}" role="button" tabindex="0" aria-label="${placeName(p)}">${lead}<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${geo.sel===i?11:9}"/><g class="mug" transform="translate(${(x-4.5).toFixed(1)},${(y-5).toFixed(1)})"><rect x="0" y="1.5" width="7" height="8.5" rx="1.2"/><path d="M7 3.5h1.6a1.4 1.4 0 0 1 1.4 1.4v1.6a1.4 1.4 0 0 1-1.4 1.4H7"/><path class="foam" d="M-.6 2.2c.3-1.6 1.6-2.2 2.6-1.6.6-.9 2.4-.9 3 0 1-.5 2.1.2 2.2 1.6z"/></g><text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${p.a}">${placeName(p)}</text></g>`;
+ });
+ if(geo.me){const [x,y]=px(geo.me.lat,geo.me.lng);s+=`<g class="me"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="8"/><text x="${x.toFixed(1)}" y="${(y+24).toFixed(1)}" text-anchor="middle">나</text></g>`;}
+ const svg=document.getElementById("map");svg.innerHTML=s;
+ svg.querySelectorAll(".pin").forEach(g=>{
+  const pick=e=>{e.stopPropagation();geo.sel=+g.dataset.i;geo.beer=null;renderMap();renderPlaceInfo();};
+  g.addEventListener("click",pick);
+  g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(e);}});
+ });
+}
+document.getElementById("map").addEventListener("click",e=>{
+ const svg=e.currentTarget,pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+ const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+ const lng=BOUNDS.w+p.x/BOUNDS.W*(BOUNDS.e-BOUNDS.w),lat=BOUNDS.n-p.y/BOUNDS.H*(BOUNDS.n-BOUNDS.s);
+ document.getElementById("areaSel").value="";
+ setMe({lat,lng,label:"지도에서 고른 곳"});
+});
+
+function renderPlaceInfo(){
+ const box=document.getElementById("placeInfo");
+ const tline=p=>{if(!geo.me)return "";const m=minutes(km(geo.me,p));return `<span class="t ${geo.limit===null?"":(m<=geo.limit?"near":"far")}">약 ${m}분</span>`;};
+ /* 3단계: 매장 목록 → 매장(맥주 목록) → 맥주 정보 */
+ if(geo.sel!==null&&geo.beer!==null){
+  const p=PLACES[geo.sel],b=BEERS[geo.beer];
+  box.innerHTML=`<button type="button" class="back2" id="beerBack">← ${placeName(p)} 맥주 목록</button>`+beerCard({b,score:0,why:[],tr:0,near:geo.me?nearestOf(b.brewery):null},0,false);
+  document.getElementById("beerBack").onclick=()=>{geo.beer=null;renderPlaceInfo();};
+  return;
+ }
+ if(geo.sel!==null){
+  const p=PLACES[geo.sel],beers=BEERS.map((b,i)=>({b,i})).filter(x=>x.b.brewery===p.b);
+  box.innerHTML=`<button type="button" class="back2" id="selBack">← 매장 목록</button><h3>${p.b} ${p.n}</h3><p class="addr">${p.addr}</p>
+  ${geo.me?`<p style="margin-top:6px">${geo.me.label}에서 ${tline(p)} <small>(어림)</small></p>`:""}
+  <p style="margin-top:8px"><b>이 매장의 부산 맥주 ${beers.length}종</b> <small style="color:var(--muted)">· 누르면 맥주 정보가 나와요</small></p>
+  <ul class="beerpick">${beers.map(({b,i})=>`<li><button type="button" class="bp" data-b="${i}">${b.img?`<img src="${b.img}" alt="" loading="lazy">`:`<span class="noimg">사진<br>없음</span>`}<span class="bt"><b>${b.name}</b><small>${b.style} · ${b.abv?"ABV "+b.abv.map(x=>x.v).join(" / "):"ABV 정보 없음"}</small></span><span class="go">›</span></button></li>`).join("")}</ul>
+  <p style="margin-top:6px;font-size:12.5px;color:var(--muted)">양조장 매장 기준이에요. 그날 메뉴는 다를 수 있어요.</p>
+  <p style="margin-top:6px"><a href="${p.map}" target="_blank" rel="noopener">네이버 지도에서 보기 →</a></p>`;
+  document.getElementById("selBack").onclick=()=>{geo.sel=null;renderMap();renderPlaceInfo();};
+  box.querySelectorAll("button.bp").forEach(x=>x.onclick=()=>{geo.beer=+x.dataset.b;renderPlaceInfo();box.scrollIntoView({block:"nearest",behavior:"smooth"});});
+  return;
+ }
+ const list=PLACES.map((p,i)=>({p,i,m:geo.me?minutes(km(geo.me,p)):0}));
+ if(geo.me)list.sort((a,b)=>a.m-b.m);
+ box.innerHTML=`<h3>${geo.me?"가까운 매장 순서":"부산 맥주 매장 11곳"}</h3><p class="addr">${geo.me?`${geo.me.label} 기준 · 시간은 어림이에요`:"위치를 정하면 가까운 순서로 바뀌어요"}</p>
+ <ul>${list.map(({p,i})=>`<li><button type="button" class="pl" data-i="${i}"><b>${placeName(p)}</b>${tline(p)}</button></li>`).join("")}</ul>`;
+ box.querySelectorAll("button.pl").forEach(b=>b.onclick=()=>{geo.sel=+b.dataset.i;geo.beer=null;renderMap();renderPlaceInfo();});
+}
+
+function setMe(me){
+ if(me&&(me.lat<BOUNDS.s||me.lat>BOUNDS.n||me.lng<BOUNDS.w||me.lng>BOUNDS.e)){
+  document.getElementById("locMsg").innerHTML="지금 위치가 부산 지도 밖이에요. 지역을 고르거나 지도를 눌러 주세요.";return;
+ }
+ geo.me=me;showMore=false;
+ document.getElementById("locMsg").innerHTML=me?(geo.limit===null?`<b>${me.label}</b> 기준 · 거리 상관없이 취향 순서로 추천하고, 걸리는 시간을 함께 보여 드려요.`:`<b>${me.label}</b> 기준으로 ${limText(geo.limit)} 이내에 갈 수 있는 매장을 먼저 추천해요.`):"위치를 정하지 않았어요. 취향 순서로만 추천해요.";
+ if(!me)document.getElementById("areaSel").value="";
+ renderMap();renderPlaceInfo();recommend();
+}
+function renderLocCtl(){
+ const sel=document.getElementById("areaSel");
+ sel.innerHTML=`<option value="">지역 고르기</option>`+AREAS.map(([n],i)=>`<option value="${i}">${n}</option>`).join("");
+ sel.onchange=()=>{if(sel.value==="")return;const [n,la,lo]=AREAS[+sel.value];setMe({lat:la,lng:lo,label:n});};
+ const seg=document.getElementById("limitSeg");
+ const draw=()=>{seg.innerHTML=[[30,"30분 이내"],[60,"1시간 이내"],[null,"상관없음"]].map(([m,t])=>`<button type="button" data-m="${m===null?"":m}" aria-pressed="${geo.limit===m}">${t}</button>`).join("");
+  seg.querySelectorAll("button").forEach(b=>b.onclick=()=>setLimit(b.dataset.m===""?null:+b.dataset.m));};
+ window.setLimit=v=>{geo.limit=v;draw();if(geo.me)setMe(geo.me);else{renderMap();renderPlaceInfo();}};
+ draw();
+ document.getElementById("clearLoc").onclick=()=>setMe(null);
+ /* 1) 우리 팝업으로 먼저 이유를 알리고 → 2) [허용하기]를 누르면 브라우저 권한 창.
+    이미 허용한 사람은 팝업 없이 바로 위치를 가져와요. */
+ const modal=document.getElementById("permModal");
+ let lastFocus=null;
+ const openModal=()=>{lastFocus=document.activeElement;modal.hidden=false;document.getElementById("permOk").focus();};
+ const closeModal=()=>{modal.hidden=true;if(lastFocus)lastFocus.focus();};
+ /* 위치 동의를 안 하거나 못 가져오면: 위치를 지우고 원래 방식(취향 순서)으로 추천 */
+ const tasteOnly=html=>{setMe(null);document.getElementById("locMsg").innerHTML=html;};
+ const locate=()=>{
+  const msg=document.getElementById("locMsg");
+  msg.textContent="현재 위치를 찾는 중이에요…";
+  navigator.geolocation.getCurrentPosition(
+   pos=>{document.getElementById("areaSel").value="";setMe({lat:pos.coords.latitude,lng:pos.coords.longitude,label:"현재 위치"});},
+   ()=>{tasteOnly("현재 위치를 가져오지 못했어요. 대신 위치 없이 <b>취향에 맞는 맥주</b>를 추천해 드려요. 원하면 지역을 고르거나 지도를 눌러 위치를 정할 수 있어요.");},
+   {timeout:8000,maximumAge:600000});
+ };
+ document.getElementById("permOk").onclick=()=>{closeModal();locate();};
+ document.getElementById("permNo").onclick=()=>{closeModal();tasteOnly("괜찮아요! 위치 없이 <b>취향에 맞는 맥주</b>를 추천해 드려요. 원하면 지역을 고르거나 지도를 눌러 위치를 정할 수 있어요.");};
+ modal.addEventListener("click",e=>{if(e.target===modal)document.getElementById("permNo").click();});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!modal.hidden)document.getElementById("permNo").click();});
+ document.getElementById("geoBtn").onclick=async()=>{
+  if(!navigator.geolocation){document.getElementById("locMsg").textContent="이 브라우저에서는 현재 위치를 쓸 수 없어요. 지역을 고르거나 지도를 눌러 주세요.";return;}
+  let st="prompt";
+  try{if(navigator.permissions)st=(await navigator.permissions.query({name:"geolocation"})).state;}catch(e){}
+  if(st==="granted")locate(); else openModal();
+ };
+ document.getElementById("locMsg").textContent="위치를 정하지 않았어요. 취향 순서로만 추천해요.";
+}
+
+function beerCard(r,i,picked){
+ const b=r.b,st=STORES[b.brewery];
+ const photo=b.img
+  ?`<div class="ph"><img src="${b.img}" alt="${b.brewery} ${b.name} 제품 사진" loading="lazy"></div><p class="credit">사진: ${CREDIT[b.cr]}</p>`
+  :`<div class="ph none"><b>사진 정보 없음</b>공식 제품 사진을 찾지 못했어요</div><p class="credit">&nbsp;</p>`;
+ const rk=picked?(geo.me&&geo.limit!==null?`추천 ${i+1} · 취향 ${r.tr}위 · `:`${r.tr}위 · `):"";
+ const dist=r.near?`<p class="dist ${geo.limit===null?"":(r.near.min<=geo.limit?"near":"far")}">${placeName(r.near.p)}까지 약 ${r.near.min}분${geo.limit===null?"":(r.near.min<=geo.limit?" · 가까워요":" · 멀어요")}</p>`:"";
+ return `<article class="beer">
+  ${photo}
+  <div class="rankrow"><span class="rank">${rk}${b.style}</span>${picked?`<span class="score">${r.score}점</span>`:""}</div>
+  <h3>${b.name}</h3><div class="brew">${b.brewery}</div>
+  <p class="spec">${specLine(b)}</p>
+  ${dist}
+  <p class="one">${b.line}</p>
+  <div class="tags">${b.tags.map(k=>`<span>${tagName(b,k)}</span>`).join("")}${b.extra?`<span>기타: ${b.extra}</span>`:""}<span class="hyp">· 가설</span></div>
+  ${picked&&r.why.length?`<ul class="why">${r.why.map(([c,t])=>`<li class="${c}">${t}</li>`).join("")}</ul>`:""}
+  <div class="loc"><b>위치</b> ${st.where}${st.also?`<br>${st.also}`:""}<br><a href="${st.map}" target="_blank" rel="noopener">지도에서 보기 →</a></div>
+  <details><summary>근거와 출처</summary><div class="nums">${chips(b.abv,"%","도수")}${chips(b.ibu,"","IBU")}${chips(b.ph,"","pH")}</div><p>${b.quote}</p>${b.note?`<p>참고: ${b.note}</p>`:""}<p>${b.src.map(s=>`<a href="${s.url}" target="_blank" rel="noopener">${s.label}</a>`).join("<br>")}</p><p>위치 출처: ${st.src}</p></details>
+ </article>`;
+}
+
+function recommend(){
+ const picked=QUESTIONS.some(q=>state[q.key]!=="any");
+ const excluded=[];
+ let rows=BEERS.map(b=>{
+  return {b,...scoreBeer(b)};
+ }).filter(Boolean);
+ rows.sort((a,c)=>c.score-a.score||c.why.filter(w=>w[0]==="p").length-a.why.filter(w=>w[0]==="p").length);
+ let matched=picked?rows.filter(r=>r.score>0):rows;
+ matched.forEach((r,i)=>{r.tr=i+1;r.near=geo.me?nearestOf(r.b.brewery):null;});
+ const taste1=matched[0]||null; /* 결과 유형은 거리와 상관없이 취향 1순위로 정함 */
+ let banner="";
+ const L=geo.limit;
+ if(geo.me&&matched.length){
+  if(!picked){
+   matched=[...matched].sort((a,c)=>a.near.min-c.near.min);
+   banner=`취향을 아직 고르지 않아서 <b>${geo.me.label}에서 가까운 순서</b>로 보여 드려요.`;
+  }else if(L!==null){
+   const top=matched[0];
+   const near=matched.filter(r=>r.near.min<=L),far=matched.filter(r=>r.near.min>L);
+   if(top.near.min<=L){
+    banner=`<b>취향 1순위 ${top.b.name}, 가까워요!</b> ${placeName(top.near.p)}까지 약 ${top.near.min}분이에요 <small>(어림)</small>.`;
+   }else if(near.length){
+    const alt=near[0];
+    banner=`취향에 딱 맞는 1순위는 <b>${yeyo(top.b.name)}</b>. 다만 가장 가까운 매장(${placeName(top.near.p)})까지 약 ${top.near.min}분 걸려요.<br>그래서 ${limText(L)} 이내에 갈 수 있는 <b>취향 ${alt.tr}순위 ${eul(alt.b.name)}</b> 먼저 골라 드렸어요! <small>(시간은 어림)</small><br><button type="button" id="ignoreBtn">멀어도 괜찮아요 · 거리 상관없이 보기</button>`;
+   }else{
+    banner=`${limText(L)} 이내에 갈 수 있는 매장이 없어요. 취향 순서대로 보여 드리고, 걸리는 시간을 함께 적었어요. <small>(시간은 어림)</small>`;
+   }
+   matched=near.concat(far);
+  }else{
+   banner=`거리 상관없이 <b>취향 순서</b>로 보여 드려요. 걸리는 시간은 카드에 함께 적었어요. <small>(어림)</small><br><button type="button" id="ignoreBtn">다시 30분 이내 먼저 보기</button>`;
+  }
+ }
+ lastPick={picked,top:matched[0]||null,taste1,count:matched.length};
+ document.getElementById("banner").innerHTML=banner;
+ const ib=document.getElementById("ignoreBtn");if(ib)ib.onclick=()=>setLimit(geo.limit===null?30:null);
+ const shown=showMore?matched:matched.slice(0,TOP);
+ const rest=matched.length-TOP;
+ document.getElementById("summary").innerHTML=!picked
+  ?`<b>취향을 고르면 맞는 맥주 상위 ${TOP}개를 보여 드려요.</b> 아래는 부산 맥주 ${rows.length}종 중 ${showMore?"전체":`예시 ${TOP}개`}예요.`
+  :shown.length?`<b>맞는 맥주 ${matched.length}종 중 ${showMore?"전체":`상위 ${shown.length}개`}</b> · ${geo.me&&L!==null?`${limText(L)} 이내 매장 먼저, 그다음 점수 순서예요.`:"점수가 높은 순서예요."}`:`<b>딱 맞는 맥주가 없어요.</b> 고른 조건을 조금 줄여 보세요.`;
+ const tile=rest>0?`<button type="button" class="moretile" id="moreBtn" aria-expanded="${showMore}">${showMore?`<b>접기</b><span>상위 ${TOP}개만 다시 보기</span>`:`<b>+ 나머지 ${rest}종 더 보기</b><span>${geo.me&&L!==null&&picked?"멀거나 점수가 더 낮은 맥주예요.":"점수가 더 낮은 맥주예요."}<br>정보를 더 보고 싶을 때 펼쳐 보세요.</span>`}</button>`:"";
+ document.getElementById("list").innerHTML=shown.map((r,i)=>beerCard(r,i,picked)).join("")+tile;
+ const mb=document.getElementById("moreBtn");if(mb)mb.onclick=()=>{showMore=!showMore;recommend();};
+ document.getElementById("excluded").innerHTML=excluded.length?`<b>쌉쌀함(IBU) 때문에 뺀 맥주</b><ul>${excluded.map(e=>`<li>${e}</li>`).join("")}</ul>`:"";
+}
+
+
+/* 확인 버튼: 취향 1순위 맥주로 결과 유형(A~F)을 정하고, 유형별 홉이 장면 → 1.4초 뒤 '당신은 ○○형 입니다' (화면 가운데 창) */
+let lastPick={picked:false,top:null,count:0},rvTimer=null,rvTimers=[];
+const MASCOT="images/hop_mascot.png";
+function closeReveal(){clearTimeout(rvTimer);rvTimers.forEach(clearTimeout);rvTimers=[];document.getElementById("reveal").hidden=true;}
+/* 결과 유형 6개: 정효림 「결과유형-카테고리-2026-11-19」 4절(1위 맥주)·6절(스타일로 더 넣은 맥주). 유형 이름은 초안(팀 결정 전) */
+const TYPES={
+ A:{cat:"과일 향 IPA",name:"과일 향에 설레는 피서객형",act:"홉이가 바닷가로 피서를 떠나요!",beers:["고릴라 아이피에이","갈매기 IPA","쥬시 해","와일드캣 IPA","고릴라 뉴잉","부산IPA","와일드캣 페일 에일"]},
+ B:{cat:"새콤한 과일 맥주",name:"새콤함에 뛰어드는 서퍼형",act:"홉이가 파도 위로 뛰어들어요!",beers:["유자 고제","라즈베리 위트","파인애플 웨이브 고제"]},
+ C:{cat:"커피·초콜릿 흑맥주",name:"달콤쌉쌀함을 아는 카페거리 산책자형",act:"홉이가 카페거리를 거닐어요",beers:["브리티시 스타우트","둔켈"]},
+ D:{cat:"고소하고 깔끔한 라거",name:"구수함을 아는 시장 단골형",act:"홉이가 단골 시장에 왔어요!",beers:["고릴라거","오륙도페일라거","헬레스","부산라거","빅토리 라거","골든 라이스 라거","필스"]},
+ E:{cat:"향신료 향 밀·호밀 맥주",name:"알싸함에 끌리는 항구 상인형",act:"홉이가 항구에서 배를 타요",beers:["바이스","로겐","오시게 바이젠"]},
+ F:{cat:"허브 향 IPA",name:"허브 향에 반한 숲길 산책자형",act:"홉이가 숲길을 산책해요",beers:["Praha993 IPA"]}
+};
+const typeOf=name=>Object.keys(TYPES).find(k=>TYPES[k].beers.includes(name));
+const SCENES={
+ A:`<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"><rect width="100" height="56" fill="#bfe6f5"/><circle class="sun" cx="80" cy="17" r="9" fill="#ffd05a"/><rect y="50" width="100" height="20" fill="#4fb3d9"/><path class="wave" d="M0 52q6.25-3 12.5 0t12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0v4H0z" fill="#8fd3ec"/><rect y="68" width="100" height="32" fill="#f3dca4"/><line x1="18" y1="44" x2="22" y2="90" stroke="#9b6a2e" stroke-width="1.6"/><path d="M4 48q16-18 34 -6z" fill="#ff6b5a" stroke="#153b46" stroke-width=".8"/><path d="M14 45q5-9 12-6" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="82" cy="86" r="2" fill="#f7a8a0"/><path d="M70 90l3-3 3 3z" fill="#e9b26e"/></svg>`,
+ B:`<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"><rect width="100" height="100" fill="#cfeefa"/><circle class="sun" cx="18" cy="16" r="8" fill="#ffd05a"/><rect y="46" width="100" height="54" fill="#3aa5d0"/><path class="wave" d="M0 60q6.25-6 12.5 0t12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0V100H0z" fill="#2b8fbf"/><path class="wave2" d="M0 76q6.25-5 12.5 0t12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0V100H0z" fill="#1f7aa8"/><path d="M62 46q14-16 30-4q-10-2-14 6z" fill="#fff" opacity=".9"/></svg>`,
+ C:`<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"><rect width="100" height="100" fill="#f6e7d3"/><rect x="8" y="20" width="84" height="56" fill="#fff8ee" stroke="#153b46" stroke-width=".8"/><rect x="16" y="36" width="30" height="30" fill="#bfe0ea" stroke="#153b46" stroke-width=".8"/><rect x="54" y="36" width="30" height="40" fill="#9b6a2e" stroke="#153b46" stroke-width=".8"/><path d="M6 20h88l-4 10H10z" fill="#153b46"/><path d="M14 20l-2 10M26 20l-1 10M38 20v10M50 20v10M62 20v10M74 20l1 10M86 20l2 10" stroke="#fff7e6" stroke-width="3"/><text x="50" y="16" text-anchor="middle" font-size="7" font-weight="800" fill="#153b46">CAFE</text><rect y="76" width="100" height="24" fill="#d9c6a8"/><rect x="74" y="80" width="14" height="2" fill="#153b46"/><line x1="81" y1="82" x2="81" y2="92" stroke="#153b46" stroke-width="1.2"/><rect x="77" y="74" width="7" height="6" rx="1" fill="#fff" stroke="#153b46" stroke-width=".6"/><path class="steam" d="M79 72q-2-3 0-6" fill="none" stroke="#9b6a2e" stroke-width=".9"/><path class="steam" d="M82 72q2-3 0-6" fill="none" stroke="#9b6a2e" stroke-width=".9"/></svg>`,
+ D:`<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"><rect width="100" height="100" fill="#fff1d6"/><path d="M0 12q25 8 50 0t50 0" fill="none" stroke="#153b46" stroke-width=".6"/><circle cx="14" cy="16" r="3" fill="#ff6b5a"/><circle cx="38" cy="15" r="3" fill="#ffd05a"/><circle cx="62" cy="15" r="3" fill="#ff6b5a"/><circle cx="86" cy="16" r="3" fill="#ffd05a"/><g stroke="#153b46" stroke-width=".7"><rect x="2" y="30" width="30" height="34" fill="#fff8ee"/><rect x="35" y="30" width="30" height="34" fill="#fff8ee"/><rect x="68" y="30" width="30" height="34" fill="#fff8ee"/><path d="M0 24h34l-2 8H2z" fill="#ff6b5a"/><path d="M33 24h34l-2 8H35z" fill="#4f9a55"/><path d="M66 24h34l-2 8H68z" fill="#e7b04a"/></g><circle cx="10" cy="58" r="3" fill="#ff8f5a"/><circle cx="17" cy="58" r="3" fill="#ffd05a"/><circle cx="24" cy="58" r="3" fill="#ff8f5a"/><circle cx="44" cy="58" r="3" fill="#7cc36b"/><circle cx="51" cy="58" r="3" fill="#7cc36b"/><circle cx="58" cy="58" r="3" fill="#b4472f"/><circle cx="77" cy="58" r="3" fill="#e9b26e"/><circle cx="84" cy="58" r="3" fill="#e9b26e"/><circle cx="91" cy="58" r="3" fill="#e9b26e"/><rect y="64" width="100" height="36" fill="#e2cfa6"/></svg>`,
+ E:`<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"><rect width="100" height="60" fill="#d7ecf5"/><path class="gull" d="M10 20q3-3 6 0q3-3 6 0" fill="none" stroke="#153b46" stroke-width=".9"/><path class="gull" d="M30 12q2-2 4 0q2-2 4 0" fill="none" stroke="#153b46" stroke-width=".8"/><rect x="0" y="40" width="22" height="22" fill="#9b6a2e" stroke="#153b46" stroke-width=".7"/><rect x="3" y="32" width="8" height="8" fill="#e7b04a" stroke="#153b46" stroke-width=".6"/><rect x="11" y="34" width="7" height="6" fill="#c98a3a" stroke="#153b46" stroke-width=".6"/><rect y="56" width="100" height="44" fill="#3f88b5"/><g class="rock"><path d="M22 70h58l-8 14H30z" fill="#ff6b5a" stroke="#153b46" stroke-width=".9"/><rect x="26" y="66" width="50" height="5" fill="#fff8ee" stroke="#153b46" stroke-width=".7"/></g><path class="wave" d="M0 86q6.25-3 12.5 0t12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0 12.5 0V100H0z" fill="#2f78a4"/></svg>`,
+ F:`<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"><rect width="100" height="100" fill="#e5f4dc"/><g stroke="#153b46" stroke-width=".6"><rect x="12" y="44" width="4" height="18" fill="#9b6a2e"/><path d="M14 12l14 34H0z" fill="#4f9a55"/><rect x="84" y="40" width="4" height="22" fill="#9b6a2e"/><path d="M86 6l15 36H71z" fill="#2f7a4f"/><rect x="62" y="48" width="3" height="12" fill="#9b6a2e"/><path d="M63.5 24l10 26h-20z" fill="#7cc36b"/></g><rect y="60" width="100" height="40" fill="#b9dca2"/><path d="M-5 100q30-26 55-30t60 -6v12q-30 2-55 8t-50 16z" fill="#e8d5a8"/><ellipse class="leaf" cx="30" cy="10" rx="2" ry="1.2" fill="#e7b04a"/><ellipse class="leaf" cx="55" cy="4" rx="2" ry="1.2" fill="#4f9a55"/><ellipse class="leaf" cx="75" cy="12" rx="2" ry="1.2" fill="#ff8f5a"/><ellipse class="leaf" cx="45" cy="0" rx="2" ry="1.2" fill="#7cc36b"/></svg>`
+};
+function openReveal(){
+ recommend();
+ const box=document.getElementById("reveal"),st=document.getElementById("rvStage"),sc=document.getElementById("rvScene"),ty=document.getElementById("rvType"),cap=document.getElementById("rvTitle"),body=document.getElementById("rvBody");
+ clearTimeout(rvTimer);rvTimers.forEach(clearTimeout);rvTimers=[];
+ st.className="rvstage";sc.innerHTML="";ty.textContent="";cap.classList.remove("pop");body.innerHTML="";
+ box.hidden=false;
+ if(!lastPick.picked){st.classList.add("idle");cap.textContent="취향을 하나 이상 골라 주세요!";body.innerHTML="맛·향을 눌러 고르거나 마시는 느낌을 정하면 홉이가 당신의 유형을 알려 드려요.";return;}
+ if(!lastPick.taste1){st.classList.add("idle");cap.textContent="딱 맞는 맥주를 못 찾았어요";body.innerHTML="고른 조건을 조금 줄여 보세요. ‘상관없음’으로 바꾸면 더 많이 나와요.";return;}
+ const t1=lastPick.taste1,b=t1.b,k=typeOf(b.name)||"A",T=TYPES[k],top=lastPick.top;
+ sc.innerHTML=SCENES[k];
+ void st.offsetWidth;st.classList.add("sc-"+k);
+ cap.textContent=T.act;
+ rvTimers.push(setTimeout(()=>{
+  ty.textContent=`${k}. ${T.cat}`;
+  cap.innerHTML=`당신은 <b>${T.name}</b> 입니다`;void cap.offsetWidth;cap.classList.add("pop");
+  const mates=T.beers.filter(n=>n!==b.name);
+  const swap=top&&top.b!==b?`<p class="mates">${limText(geo.limit)} 이내에서는 <b>${top.b.name}</b>${top.near?`(${placeName(top.near.p)} 약 ${top.near.min}분)`:""}${hasJong(top.b.name)?"을":"를"} 먼저 추천해요.</p>`:"";
+  body.innerHTML=`<div class="top1">${b.img?`<img src="${b.img}" alt="">`:`<span class="ni">사진<br>없음</span>`}<div><small>취향 1순위</small><br><b>${b.name}</b> · ${b.brewery}<br><small>${b.line}</small></div></div>${swap}${mates.length?`<p class="mates">이 유형의 다른 맥주<br>${mates.map(n=>`<span>${n}</span>`).join("")}</p>`:""}<button type="button" class="go" id="rvGo">추천 목록 보기 (${lastPick.count}종)</button><p class="draft">유형 이름은 팀 초안이에요(정효림 「결과유형-카테고리」 2026-11-19).</p>`;
+  document.getElementById("rvGo").onclick=()=>{closeReveal();document.getElementById("list").scrollIntoView({behavior:"smooth",block:"start"});};
+ },1400));
+}
+document.getElementById("confirmBtn").onclick=openReveal;
+document.getElementById("rvClose").onclick=closeReveal;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!document.getElementById("reveal").hidden)closeReveal();});
+document.addEventListener("click",e=>{const box=document.getElementById("reveal");if(!box.hidden&&!box.contains(e.target)&&e.target.id!=="confirmBtn")closeReveal();});
+document.getElementById("reset").onclick=()=>{QUESTIONS.forEach(q=>state[q.key]="any");showMore=false;renderQuestions();recommend();};
+renderQuestions();renderLocCtl();renderMap();renderPlaceInfo();recommend();
+</script>
+</body>
+</html>
