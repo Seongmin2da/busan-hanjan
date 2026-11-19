@@ -239,6 +239,11 @@ footer.foot{margin-top:40px;border-top:1px solid var(--navy);padding-top:14px;fo
 .kpin.sel svg rect,.kpin.sel svg .foam{fill:#ffd05a}
 .kme{display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:800;color:#b4472f;pointer-events:none;text-shadow:0 0 3px #fff,0 0 3px #fff}
 .kme i{width:16px;height:16px;border-radius:50%;background:#b4472f;border:3px solid #fff;box-shadow:0 0 0 2px #b4472f66}
+.route{display:inline-flex;flex-wrap:wrap;gap:6px}
+.route a{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;text-decoration:none;color:var(--navy);background:#fee500;border:1px solid #e6cf00;border-radius:999px;padding:5px 11px}
+.route a:hover{filter:brightness(.96)}
+.routenote{margin-top:4px;font-size:12px;color:var(--muted)}
+.distroute{margin-top:6px}
 </style>
 </head>
 <body>
@@ -592,6 +597,15 @@ document.getElementById("map").addEventListener("click",e=>{
 
 function renderPlaceInfo(){
  const box=document.getElementById("placeInfo");
+ /* 카카오맵 길찾기 바로가기: 카카오맵이 실제 추천 경로와 시간을 계산해 줌 (키 필요 없음).
+    위치를 정했으면 출발지까지 넣고, 없으면 도착지만 넣음(카카오맵에서 현재 위치로 출발) */
+ const routeLinks=p=>{
+  const dest=`${encodeURIComponent(placeName(p))},${p.lat},${p.lng}`;
+  if(!geo.me)return `<span class="route"><a href="https://map.kakao.com/link/to/${dest}" target="_blank" rel="noopener">🧭 카카오맵 길찾기</a></span>`;
+  const from=`${encodeURIComponent(geo.me.label)},${geo.me.lat.toFixed(6)},${geo.me.lng.toFixed(6)}`;
+  return `<span class="route"><a href="https://map.kakao.com/link/by/traffic/${from}/${dest}" target="_blank" rel="noopener">🚌 대중교통 길찾기</a><a href="https://map.kakao.com/link/by/car/${from}/${dest}" target="_blank" rel="noopener">🚗 자동차 길찾기</a></span>`;
+ };
+ window.routeLinks=routeLinks;
  const tline=p=>{if(!geo.me)return "";const m=minutes(km(geo.me,p));return `<span class="t ${geo.limit===null?"":(m<=geo.limit?"near":"far")}">약 ${m}분</span>`;};
  /* 3단계: 매장 목록 → 매장(맥주 목록) → 맥주 정보 */
  if(geo.sel!==null&&geo.beer!==null){
@@ -603,7 +617,8 @@ function renderPlaceInfo(){
  if(geo.sel!==null){
   const p=PLACES[geo.sel],beers=BEERS.map((b,i)=>({b,i})).filter(x=>x.b.brewery===p.b);
   box.innerHTML=`<button type="button" class="back2" id="selBack">← 매장 목록</button><h3>${p.b} ${p.n}</h3><p class="addr">${p.addr}</p>
-  ${geo.me?`<p style="margin-top:6px">${geo.me.label}에서 ${tline(p)} <small>(어림)</small></p>`:""}
+  ${geo.me?`<p style="margin-top:6px">${geo.me.label}에서 ${tline(p)} <small>(직선 거리로 어림)</small></p>`:""}
+  <p style="margin-top:8px">${routeLinks(p)}</p><p class="routenote">실제 걸리는 시간과 가장 빠른 경로는 카카오맵에서 확인할 수 있어요.</p>
   <p style="margin-top:8px"><b>이 매장의 부산 맥주 ${beers.length}종</b> <small style="color:var(--muted)">· 누르면 맥주 정보가 나와요</small></p>
   <ul class="beerpick">${beers.map(({b,i})=>`<li><button type="button" class="bp" data-b="${i}">${b.img?`<img src="${b.img}" alt="" loading="lazy">`:`<span class="noimg">사진<br>없음</span>`}<span class="bt"><b>${b.name}</b><small>${b.style} · ${b.abv?"ABV "+b.abv.map(x=>x.v).join(" / "):"ABV 정보 없음"}</small></span><span class="go">›</span></button></li>`).join("")}</ul>
   <p style="margin-top:6px;font-size:12.5px;color:var(--muted)">양조장 매장 기준이에요. 그날 메뉴는 다를 수 있어요.</p>
@@ -674,7 +689,7 @@ function beerCard(r,i,picked){
   ?`<div class="ph"><img src="${b.img}" alt="${b.brewery} ${b.name} 제품 사진" loading="lazy"></div><p class="credit">사진: ${CREDIT[b.cr]}</p>`
   :`<div class="ph none"><b>사진 정보 없음</b>공식 제품 사진을 찾지 못했어요</div><p class="credit">&nbsp;</p>`;
  const rk=picked?(geo.me&&geo.limit!==null?`추천 ${i+1} · 취향 ${r.tr}위 · `:`${r.tr}위 · `):"";
- const dist=r.near?`<p class="dist ${geo.limit===null?"":(r.near.min<=geo.limit?"near":"far")}">${placeName(r.near.p)}까지 약 ${r.near.min}분${geo.limit===null?"":(r.near.min<=geo.limit?" · 가까워요":" · 멀어요")}</p>`:"";
+ const dist=r.near?`<p class="dist ${geo.limit===null?"":(r.near.min<=geo.limit?"near":"far")}">${placeName(r.near.p)}까지 약 ${r.near.min}분 <small>(직선 어림)</small>${geo.limit===null?"":(r.near.min<=geo.limit?" · 가까워요":" · 멀어요")}</p><p class="distroute">${window.routeLinks?routeLinks(r.near.p):""}</p>`:"";
  return `<article class="beer">
   ${photo}
   <div class="rankrow"><span class="rank">${rk}${b.style}</span>${picked?`<span class="score">${r.score}점</span>`:""}</div>
